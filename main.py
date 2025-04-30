@@ -1,28 +1,26 @@
 from quards.explorer import explorer
 from quards.evaluator.state import State
 from quards.evaluator.action import Action
+from quards.evaluator import lorcana
 
-from quards.database.model import get_connection
-
-
-def run_sql_file(path):
-    with open(path, "r") as f:
-        sql = f.read()
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            # TESTING ONLY
-            cur.execute("DROP TABLE IF EXISTS states ;  DROP TABLE IF EXISTS edges;")
-            cur.execute(sql)
-        conn.commit()
+from quards.database.db import run_sql_file, run_sql
 
 
 if __name__ == "__main__":
 
+    run_sql("DROP TABLE IF EXISTS states ;  DROP TABLE IF EXISTS edges;")
     run_sql_file("quards/database/setup.sql")
 
-    state = State.new("my-unique-seed", {"zones": []})
+    # This is a good point of abstraction. This is where the "game" starts. Right
+    # now it's just configured to have a single game
 
-    Action.new(state.signature(), "start")
+    game_id = "my-new-game-uuid"
+    game = "lorcana"
+
+    state_json = lorcana.get_empty_state()
+    state = State.new(game, game_id, state_json)
+
+    Action.new(game_id, state.signature(), "start")
 
     while True:
         if explorer.take_action() is None:

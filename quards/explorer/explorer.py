@@ -8,14 +8,14 @@ def take_action():
     if action is None:
         return None
 
-    print(f"Taking action: {action.name}")
-    print("fake evaluator gave me a new state")
-    print("creating a new state object")
-    new_state = State.new("my-unique-seed", {"zones": [[], []]})
+    print(f"\tTaking action: {action.name}...")
+    new_state, actions = action.execute()
 
-    print("created jobs based on the new state")
+    print(f"\t\tTotal of {len(actions)} to be added...")
+    for a in actions:
+        Action.new(action.game_id, new_state.signature(), a["name"], a["params"])
 
-    print(f"resolving the previous job {action.id}")
+    print(f"\t\t\tResolving the action")
     action.resolve_edge(new_state.signature())
 
     return action

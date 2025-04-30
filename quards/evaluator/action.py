@@ -1,10 +1,11 @@
-# evaluator/action.py
-
+from quards.evaluator.state import State
 from quards.database import model
+from quards.evaluator import lorcana
 
 
 class Action:
-    def __init__(self, start_state_sig, name, params=None, id=None):
+
+    def __init__(self, game_id, start_state_sig, name, params=None, id=None):
         """
         Represents an action that can transform a state.
 
@@ -16,6 +17,8 @@ class Action:
         self.name = name
         self.params = params
         self.id = id
+        self.game_id = game_id
+        self.state = None
 
     def apply(self, state):
         """
@@ -30,12 +33,12 @@ class Action:
         model.resolve_edge(self.id, new_state)
 
     @classmethod
-    def new(cls, start_state_sig, name, params=None):
-        action = Action(start_state_sig, name, params)
+    def new(cls, game_id, start_state_sig, name, params=None):
+        action = Action(game_id, start_state_sig, name, params)
 
         # TODO: This doesn't set the ID. It doesn't matter yet, but I might
         #       need this later if it's important.
-        model.insert_edge(action.start_state_sig, action.name, action.params)
+        model.insert_edge(game_id, action.start_state_sig, action.name, action.params)
         return action
 
     @classmethod
@@ -45,8 +48,23 @@ class Action:
             return None
 
         return Action(
+            action_dict["game_id"],
             action_dict["parent_signature"],
             action_dict["name"],
             action_dict["params"],
             action_dict["id"],
         )
+
+    def get_state(self):
+        if self.state:
+            return self.state
+
+        return State.from_id(self.game_id, self.start_state_sig)
+
+    def execute(self):
+        state = self.get_state()
+
+        if state.game == lorcana.LORCANA:
+            return lorcana.execute(state, self.name, self.params)
+
+        return state, []
