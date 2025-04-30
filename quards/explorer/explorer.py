@@ -9,11 +9,11 @@ def take_action():
         return None
 
     print(f"\tTaking action: {action.name}...")
-    new_state, actions = action.execute()
+    new_state, new_actions = action.execute()
 
-    print(f"\t\tTotal of {len(actions)} to be added...")
-    for a in actions:
-        Action.new(action.game_id, new_state.signature(), a["name"], a["params"])
+    print(f"\t\tTotal of {len(new_actions)} to be added...")
+    for name, params in new_actions:
+        Action.new(action.game_id, new_state.signature(), name, params)
 
     print(f"\t\t\tResolving the action")
     action.resolve_edge(new_state.signature())

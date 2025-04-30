@@ -17,7 +17,7 @@ if __name__ == "__main__":
     game_id = "my-new-game-uuid"
     game = "lorcana"
 
-    state_json = lorcana.get_empty_state()
+    state_json = lorcana.get_initial_state(game_id, "yellow-test", "purple-test")
     state = State.new(game, game_id, state_json)
 
     Action.new(game_id, state.signature(), "start")

@@ -1,6 +1,7 @@
 from quards.evaluator.state import State
 from quards.database import model
 from quards.evaluator import lorcana
+import copy
 
 
 class Action:
@@ -65,6 +66,8 @@ class Action:
         state = self.get_state()
 
         if state.game == lorcana.LORCANA:
-            return lorcana.execute(state, self.name, self.params)
+            new_state_data, actions = lorcana.execute(
+                copy.deepcopy(state.data), self.name, self.params
+            )
 
-        return state, []
+        return State.new(state.game, state.game_id, new_state_data), actions

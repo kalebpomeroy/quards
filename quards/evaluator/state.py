@@ -56,3 +56,11 @@ class State:
         state = State(game, game_id, data)
         model.insert_state(state.game_id, state.signature(), state.data)
         return state
+
+    def mutate(self, new_state_data):
+
+        new_state = State(self.game, self.game_id, new_state_data)
+
+        print("Creating new state")
+        model.insert_state(self.game_id, self.signature(), new_state.data)
+        return new_state

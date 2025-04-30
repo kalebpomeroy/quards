@@ -1,0 +1,34 @@
+zones:  
+    
+    # Hands, decks and discards are ordered list of card numbers, nothing more
+    hands:
+        player1: []
+        player2: []
+
+    decks:
+        player1: []
+        player2: []
+
+    discard:
+        player1: []
+        player2: []
+
+    ink:
+        player1: []
+        player2: []
+
+    # battlefield will be a list of game-objects that have state beyond 
+    # just being a card, including damage, rushiness, location, etc
+    battlefield:
+        player1: []
+        player2: []
+
+lore:
+    player1: 0
+    player2: 0
+
+current_player: player1
+off_player: player2
+ink_drops_available: 1
+ink_available: 0
+

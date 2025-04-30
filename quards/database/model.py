@@ -52,7 +52,7 @@ def insert_edge(game_id, parent_sig, name, params=None):
                 VALUES (%s, %s, %s, %s, 'OPEN')
                 ON CONFLICT DO NOTHING;
             """,
-                (game_id, parent_sig, name, params),
+                (game_id, parent_sig, name, json.dumps(params)),
             )
             conn.commit()
 

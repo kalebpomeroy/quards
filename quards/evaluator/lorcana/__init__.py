@@ -1,12 +1,43 @@
 from quards.evaluator.lorcana import game
+from quards.evaluator.lorcana.deck import Deck
+from quards.evaluator.lorcana import game
+from quards.evaluator.lorcana import diviner
+import yaml
+from pathlib import Path
 
 LORCANA = "lorcana"
 
 
-def execute(state, action, params):
+def execute(state_data, action, params):
+    return do_action(state_data, action, params), diviner.list_actions(state_data)
+
+
+def do_action(state_data, action, params):
     if action == "start":
-        return game.start(state)
+        return state_data
+
+    if action == "ink":
+        return game.ink(state_data, **params)
+
+    if action == "pass":
+        return game.pass_turn(state_data)
 
 
-def get_empty_state():
-    return {}
+def get_initial_state(game_id, deck1, deck2):
+    path = Path(__file__).parent / "data/initial_state.yaml"
+    with open(path, "r") as f:
+        state_data = yaml.safe_load(f)
+
+    player1_deck = Deck(deck1)
+    player2_deck = Deck(deck2)
+
+    player1_deck.shuffle(game_id)
+    player2_deck.shuffle(game_id)
+
+    state_data["zones"]["decks"][state_data["current_player"]] = player1_deck.deck
+    state_data["zones"]["decks"][state_data["off_player"]] = player2_deck.deck
+
+    state_data = game.draw(state_data, state_data["current_player"], 7)
+    state_data = game.draw(state_data, state_data["off_player"], 7)
+
+    return state_data
