@@ -1,7 +1,7 @@
-from quards.evaluator.action import Action
+from quards.action import Action
 
 
-MAX_DEPTH = 10
+MAX_DEPTH = 5
 
 
 def start_explore(seed, state):
@@ -19,13 +19,13 @@ def start_explore(seed, state):
 
         # If we didn't do anything, we should increment the depth
         if not action_taken:
+            # Players can pass up to (60-7)*2 times. Those branches and many others
+            # are quite uninteresting, so we're only going to go so far
+            if depth >= MAX_DEPTH:
+                return
+
             depth += 1
             print(f"We delve deeper: {depth}")
-
-        # Players can pass up to (60-7)*2 times. Those branches and many others
-        # are quite uninteresting, so we're only going to go so far
-        if depth > MAX_DEPTH:
-            return None
 
 
 def take_action(seed, depth):

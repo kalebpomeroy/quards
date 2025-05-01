@@ -1,4 +1,4 @@
-from quards.evaluator.state import State
+from quards.state import State
 from quards.database import model
 from quards.evaluator import lorcana
 import copy
