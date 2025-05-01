@@ -10,4 +10,4 @@ def get_evaluator(game):
     # Other systems can be created here, so long as they honor to the contract
 
     # def execute(state.data, action, params)
-    # )
+    # def get_actions(state.data)

@@ -53,7 +53,7 @@ class State:
         :return: State instance
         """
         state = State(game, seed, data)
-        model.insert_state(state.seed, state.signature(), state.data)
+        model.insert_state(game, state.seed, state.signature(), state.data)
         return state
 
     def get_actions(self):

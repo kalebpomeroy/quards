@@ -1,7 +1,7 @@
 -- States table: stores all known states for a given seed
 CREATE TABLE states (
     seed TEXT NOT NULL,
-    game TEXT NOT NULL DEFAULT 'lorcana' CHECK (game in ('lorcana', 'splendor')),
+    game TEXT NOT NULL,
     state_signature TEXT NOT NULL,
     state_json JSONB NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),

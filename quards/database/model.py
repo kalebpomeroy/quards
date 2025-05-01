@@ -6,17 +6,17 @@ from datetime import datetime
 from quards.database.db import get_connection
 
 
-def insert_state(seed, state_signature, state_obj):
+def insert_state(game, seed, state_signature, state_obj):
 
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO states (seed, state_signature, state_json)
-                VALUES (%s, %s, %s)
+                INSERT INTO states (game, seed, state_signature, state_json)
+                VALUES (%s, %s, %s, %s)
                 ON CONFLICT DO NOTHING;
             """,
-                (seed, state_signature, json.dumps(state_obj)),
+                (game, seed, state_signature, json.dumps(state_obj)),
             )
             conn.commit()
 
