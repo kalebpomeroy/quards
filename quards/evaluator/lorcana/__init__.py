@@ -2,6 +2,7 @@ from quards.evaluator.lorcana import game
 from quards.evaluator.lorcana.deck import Deck
 from quards.evaluator.lorcana import game
 from quards.evaluator.lorcana import diviner
+from quards.database import model
 import yaml
 from pathlib import Path
 
@@ -14,14 +15,14 @@ def get_actions(state_data):
 
 def execute(state_data, action, params):
 
-    after_action_state = do_action(state_data, action, params)
+    after_action_state = _do_action(state_data, action, params)
 
     state_data = game.did_i_win(state_data)
 
     return after_action_state
 
 
-def do_action(state_data, action, params):
+def _do_action(state_data, action, params):
     if action == "start":
         return state_data
 
@@ -50,3 +51,13 @@ def get_initial_state(seed, deck1, deck2):
     state_data = game.draw(state_data, state_data["off_player"], 7)
 
     return state_data
+
+
+def get_turn_summary(seed, turn):
+
+    all_states = model.get_states_for_turn(seed, turn)
+
+    print(f"\tTotal possibilities: {len(all_states)}")
+    print(f"\tTotal paths to victory: {len([s for s in all_states if s['complete']])}")
+
+    return True

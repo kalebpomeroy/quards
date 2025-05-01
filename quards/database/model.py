@@ -43,6 +43,19 @@ def get_state(seed, state_signature):
             return None
 
 
+def get_states_for_turn(seed, turn):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT state_json FROM states 
+                WHERE  (state_json->>'turn')::int = %s AND seed = %s
+            """,
+                (turn, seed),
+            )
+            return [row[0] for row in cur.fetchall()]
+
+
 def insert_edge(seed, parent_sig, name, params, turn):
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -85,13 +98,13 @@ def get_pending_edge(seed, turn):
             return None
 
 
-def resolve_edge(action_id, child_sig):
+def resolve_edge(action_id, state):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
                 UPDATE edges SET child_signature = %s, status = 'CLOSED' WHERE id = %s;
             """,
-                (child_sig, action_id),
+                (state.signature(), action_id),
             )
             conn.commit()

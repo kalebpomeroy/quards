@@ -22,7 +22,7 @@ CREATE TABLE edges (
     params JSONB,
 
     child_signature TEXT,
-    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED', 'ERROR')),
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED', 'ERROR', 'SOLVED')),
     
     created_at TIMESTAMP DEFAULT NOW()
 );

@@ -1,11 +1,13 @@
 from quards.action import Action
 
+from quards.evaluator import get_evaluator
 
 MAX_DEPTH = 5
 
 
 def start_explore(seed, state):
 
+    evaluator = get_evaluator(state.game)
     # Given a seed and state create an action to kick of the game. This is
     # mostly a passthrough that creates the next turn of actions
     Action.new(seed, state.signature(), "start", None, 0)
@@ -19,13 +21,18 @@ def start_explore(seed, state):
 
         # If we didn't do anything, we should increment the depth
         if not action_taken:
+
+            # This is a temporary method that will spit out useful data for
+            # understanding the value of a turn
+            evaluator.get_turn_summary(seed, depth)
+
             # Players can pass up to (60-7)*2 times. Those branches and many others
             # are quite uninteresting, so we're only going to go so far
             if depth >= MAX_DEPTH:
                 return
 
             depth += 1
-            print(f"We delve deeper: {depth}")
+            print(f"We must delve deeper: {depth}")
 
 
 def take_action(seed, depth):
@@ -44,7 +51,7 @@ def take_action(seed, depth):
     state = action.execute()
 
     # The current action is be resolved to point at the newly generated state
-    action.resolve_edge(state.signature())
+    action.resolve_edge(state)
 
     # The next set of actions will be placed at this depth. This is the same
     # as the current_depth, with the exceptions of the pass and start actions
