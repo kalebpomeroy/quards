@@ -1,7 +1,7 @@
 import json
 import hashlib
 from quards.database import model
-from quards.evaluator import lorcana
+from quards.evaluator import get_evaluator
 
 
 class State:
@@ -63,5 +63,5 @@ class State:
 
         :return [ (name, params)... ]
         """
-        if self.game == lorcana.LORCANA:
-            return lorcana.get_actions(self.data)
+
+        return get_evaluator(self.game).get_actions(self.data)
