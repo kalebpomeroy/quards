@@ -5,25 +5,22 @@ from quards.evaluator import lorcana
 
 from quards.database.db import run_sql_file, run_sql
 
-
 if __name__ == "__main__":
 
+    # For testing purposes, I'm just creating the database for scratch each time
     run_sql("DROP TABLE IF EXISTS states ;  DROP TABLE IF EXISTS edges;")
     run_sql_file("quards/database/setup.sql")
 
-    # This is a good point of abstraction. This is where the "game" starts. Right
-    # now it's just configured to have a single game
+    # Ideally this in a unique way. This is the ID of the same and the seed
+    seed = "my-new-game-uuid"
 
-    game_id = "my-new-game-uuid"
-    game = "lorcana"
+    # Decks are stored on the filesystem in quards.evaluator.lorcana.data.decks
+    # This method returns a dict of a state to start at
+    state_data = lorcana.get_initial_state(seed, "yellow-test", "purple-test")
+    state = State.new(lorcana.LORCANA, seed, state_data)
 
-    state_json = lorcana.get_initial_state(game_id, "yellow-test", "purple-test")
-    state = State.new(game, game_id, state_json)
+    # Eventually this would be daemonized to be infinite workers on all states
+    # For testing, we're just exploring our current seed
+    explorer.start_explore(seed, state)
 
-    Action.new(game_id, state.signature(), "start")
-
-    while True:
-        if explorer.take_action() is None:
-            break
-
-    print("nothing was left so we're done.")
+    print("Every universe has been explored")

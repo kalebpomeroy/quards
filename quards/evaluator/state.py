@@ -1,24 +1,21 @@
 import json
 import hashlib
 from quards.database import model
+from quards.evaluator import lorcana
 
 
 class State:
-    def __init__(self, game, game_id, data):
+
+    def __init__(self, game, seed, data):
         """
         Initialize a State object.
 
+        :param game: what game/system is this should be using
         :param data: A dictionary representing the full state.
         """
-        self.game_id = game_id
+        self.seed = seed
         self.data = data
         self.game = game
-
-    def to_json(self):
-        """
-        Returns the state as a JSON-serializable dictionary.
-        """
-        return self.data
 
     def signature(self):
         """
@@ -28,39 +25,43 @@ class State:
             A SHA-256 hex digest string.
         """
         serialized = json.dumps(self.data, sort_keys=True, separators=(",", ":"))
+        # I'm not sure if we need the seed as part of the signature. This might be
+        # overly protective, but is there a downside? More thinking needed.
         return "{}-{}".format(
-            self.game_id, hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+            self.seed, hashlib.sha256(serialized.encode("utf-8")).hexdigest()
         )
 
     @classmethod
-    def from_id(cls, game_id, state_signature):
+    def from_id(cls, seed, state_signature):
         """
-        Loads a State object from a Signature
+        Loads a State object from a seed and signature
 
-        :param game_id: what game ID the state belongs to
+        :param seed: what seed state belongs to
         :param state_signature: The ID of the state
         :return: State instance
         """
-        state_model = model.get_state(game_id, state_signature)
-        return State(state_model["game"], state_model["game_id"], state_model["state"])
+        state_model = model.get_state(seed, state_signature)
+        return State(state_model["game"], state_model["seed"], state_model["state"])
 
     @classmethod
-    def new(cls, game, game_id, data):
+    def new(cls, game, seed, data):
         """
         Create a State object in the database from a JSON-serializable dictionary.
 
-        :param game_id: The game ID the state will belong to
+        :param seed: The seed the state will belong to
         :param data: Dictionary representing the state.
         :return: State instance
         """
-        state = State(game, game_id, data)
-        model.insert_state(state.game_id, state.signature(), state.data)
+        state = State(game, seed, data)
+        model.insert_state(state.seed, state.signature(), state.data)
         return state
 
-    def mutate(self, new_state_data):
+    def get_actions(self):
+        """
+        For a state, get all of the actions that we could take from here,
+        returns a list of tuples of action name plus a dict of params
 
-        new_state = State(self.game, self.game_id, new_state_data)
-
-        print("Creating new state")
-        model.insert_state(self.game_id, self.signature(), new_state.data)
-        return new_state
+        :return [ (name, params)... ]
+        """
+        if self.game == lorcana.LORCANA:
+            return lorcana.get_actions(self.data)

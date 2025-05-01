@@ -4,70 +4,95 @@ from quards.evaluator import lorcana
 import copy
 
 
+# NOTE on terminology:
+# Actions are simply edges that connect state. Most of the application we use
+# the word action as it's more consistent with how a user things of the map.
+# Within the context of the Action, we start being a little more explicit about
+# edges and traversals using graph language
 class Action:
 
-    def __init__(self, game_id, start_state_sig, name, params=None, id=None):
+    def __init__(self, id, seed, start_state_sig, name, params=None):
         """
         Represents an action that can transform a state.
 
-        :param action_id: Unique identifier for this action (string or UUID)
-        :param name: Human-readable name for this action
-        :param apply_fn: A function taking (state) -> new state
+        :params seed: The seed the action belongs to
+        :params start_state_sig: The starting state signature
+        :param name:  Name for this action, will be used in the evaluator
+        :param params: A dict of options that will be used to perform the action
+        :param id: the action if, if loading from the database
         """
         self.start_state_sig = start_state_sig
         self.name = name
         self.params = params
         self.id = id
-        self.game_id = game_id
+        self.seed = seed
         self.state = None
 
-    def apply(self, state):
-        """
-        Apply this action to a given State object and return a new State.
-        """
-        return self.apply_fn(state)
-
-    def __repr__(self):
-        return f"Action({self.name})"
-
     def resolve_edge(self, new_state):
+        """
+        Given the resulting state, mark an edge complete.
+
+        params: State object to mark as complete
+        """
         model.resolve_edge(self.id, new_state)
 
     @classmethod
-    def new(cls, game_id, start_state_sig, name, params=None):
-        action = Action(game_id, start_state_sig, name, params)
+    def new(cls, seed, start_state_sig, name, params, turn):
+        """
+        Create a new action
 
-        # TODO: This doesn't set the ID. It doesn't matter yet, but I might
-        #       need this later if it's important.
-        model.insert_edge(game_id, action.start_state_sig, action.name, action.params)
+        :param seed The seed for the action
+        :param start_state_sig The parent state signature
+        :param name the Action name
+        :param params a dict of options for the action
+        :param turn that this will be executed
+        """
+        id = model.insert_edge(seed, start_state_sig, name, params, turn)
+
+        action = Action(id, seed, start_state_sig, name, params)
         return action
 
     @classmethod
-    def get_pending_edge(cls):
-        action_dict = model.get_pending_edge()
+    def get_pending_edge(cls, seed, turn):
+        """
+        Get any one pending edge for our seed at the current turn
+
+        :param seed the seed for the action
+        :param turn int of the current depth
+        """
+        action_dict = model.get_pending_edge(seed, turn)
         if action_dict is None:
             return None
 
         return Action(
-            action_dict["game_id"],
+            action_dict["id"],
+            action_dict["seed"],
             action_dict["parent_signature"],
             action_dict["name"],
             action_dict["params"],
-            action_dict["id"],
         )
 
-    def get_state(self):
+    def get_starting_state(self):
+        """
+        Lazy load the parent state for this action, caching it as necessary
+        """
         if self.state:
             return self.state
 
-        return State.from_id(self.game_id, self.start_state_sig)
+        return State.from_id(self.seed, self.start_state_sig)
 
     def execute(self):
-        state = self.get_state()
+        """
+        This executes the action based on the matching evaluator.
+        Note: As a side effect, this creates a new signature db row
+
+        returns new State object after the action has been applied
+        """
+        state = self.get_starting_state()
 
         if state.game == lorcana.LORCANA:
-            new_state_data, actions = lorcana.execute(
+            new_state_data = lorcana.execute(
                 copy.deepcopy(state.data), self.name, self.params
             )
 
-        return State.new(state.game, state.game_id, new_state_data), actions
+        return State.new(state.game, state.seed, new_state_data)

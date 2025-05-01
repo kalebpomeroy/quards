@@ -6,67 +6,71 @@ from datetime import datetime
 from quards.database.db import get_connection
 
 
-def insert_state(game_id, state_signature, state_obj):
+def insert_state(seed, state_signature, state_obj):
 
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO states (game_id, state_signature, state_json)
+                INSERT INTO states (seed, state_signature, state_json)
                 VALUES (%s, %s, %s)
                 ON CONFLICT DO NOTHING;
             """,
-                (game_id, state_signature, json.dumps(state_obj)),
+                (seed, state_signature, json.dumps(state_obj)),
             )
             conn.commit()
 
 
-def get_state(game_id, state_signature):
+def get_state(seed, state_signature):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT game_id, game, state_json FROM states 
-                WHERE state_signature = %s AND game_id = %s
+                SELECT seed, game, state_json FROM states 
+                WHERE state_signature = %s AND seed = %s
                 LIMIT 1;
             """,
-                (state_signature, game_id),
+                (state_signature, seed),
             )
             row = cur.fetchone()
 
             if row:
                 return {
-                    "game_id": row[0],
+                    "seed": row[0],
                     "game": row[1],
                     "state": row[2],
                 }
             return None
 
 
-def insert_edge(game_id, parent_sig, name, params=None):
+def insert_edge(seed, parent_sig, name, params, turn):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO edges (game_id, parent_signature, name, params, status)
-                VALUES (%s, %s, %s, %s, 'OPEN')
-                ON CONFLICT DO NOTHING;
+                INSERT INTO edges (seed, parent_signature, name, params, turn, status)
+                VALUES (%s, %s, %s, %s, %s, 'OPEN')
+                ON CONFLICT DO NOTHING
+                RETURNING id;
             """,
-                (game_id, parent_sig, name, json.dumps(params)),
+                (seed, parent_sig, name, json.dumps(params), turn),
             )
+            result = cur.fetchone()
             conn.commit()
+            return result[0] if result else None
 
 
-def get_pending_edge():
+def get_pending_edge(seed, turn):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT parent_signature, name, params, id, game_id 
+                SELECT parent_signature, name, params, id, seed 
                 FROM edges 
-                WHERE status = 'OPEN' 
+                WHERE status = 'OPEN' AND turn = %s AND seed = %s
                 LIMIT 1;
-            """
+            """,
+                (turn, seed),
             )
             row = cur.fetchone()
 
@@ -76,7 +80,7 @@ def get_pending_edge():
                     "name": row[1],
                     "params": row[2],
                     "id": int(row[3]),
-                    "game_id": row[4],
+                    "seed": row[4],
                 }
             return None
 

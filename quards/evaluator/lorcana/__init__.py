@@ -8,8 +8,17 @@ from pathlib import Path
 LORCANA = "lorcana"
 
 
+def get_actions(state_data):
+    return diviner.get_actions(state_data)
+
+
 def execute(state_data, action, params):
-    return do_action(state_data, action, params), diviner.list_actions(state_data)
+
+    after_action_state = do_action(state_data, action, params)
+
+    state_data = game.did_i_win(state_data)
+
+    return after_action_state
 
 
 def do_action(state_data, action, params):
@@ -23,7 +32,7 @@ def do_action(state_data, action, params):
         return game.pass_turn(state_data)
 
 
-def get_initial_state(game_id, deck1, deck2):
+def get_initial_state(seed, deck1, deck2):
     path = Path(__file__).parent / "data/initial_state.yaml"
     with open(path, "r") as f:
         state_data = yaml.safe_load(f)
@@ -31,8 +40,8 @@ def get_initial_state(game_id, deck1, deck2):
     player1_deck = Deck(deck1)
     player2_deck = Deck(deck2)
 
-    player1_deck.shuffle(game_id)
-    player2_deck.shuffle(game_id)
+    player1_deck.shuffle(seed)
+    player2_deck.shuffle(seed)
 
     state_data["zones"]["decks"][state_data["current_player"]] = player1_deck.deck
     state_data["zones"]["decks"][state_data["off_player"]] = player2_deck.deck
