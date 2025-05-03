@@ -23,12 +23,27 @@ def execute(state_data, action, params):
 
 
 def _do_action(state_data, action, params):
+
     if action == "start":
         return state_data
 
+    # 4.3.3 Ink
     if action == "ink":
         return game.ink(state_data, **params)
 
+    # 4.3.4 Play
+    if action == "play":
+        return game.play(state_data, **params)
+
+    # 4.3.5 Quest
+
+    # 4.3.6 Challenge
+
+    # 4.3.7 Move
+
+    # 4.3.8 Activate
+
+    # 4.4 End of Turn
     if action == "pass":
         return game.pass_turn(state_data)
 
@@ -58,6 +73,9 @@ def get_turn_summary(seed, turn):
     all_states = model.get_states_for_turn(seed, turn)
 
     print(f"\tTotal possibilities: {len(all_states)}")
-    print(f"\tTotal paths to victory: {len([s for s in all_states if s['complete']])}")
+    print(
+        f"\tTotal paths to victory: {len([s for s in all_states if s['complete'] and 'error' not in s])}"
+    )
+    print(f"\tTotal pruned paths: {len([s for s in all_states if 'error' in s])}")
 
     return True

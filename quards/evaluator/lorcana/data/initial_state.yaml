@@ -27,6 +27,7 @@ lore:
     player1: 0
     player2: 0
 
+bag: []
 current_player: player1
 off_player: player2
 ink_drops_available: 1

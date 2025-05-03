@@ -24,7 +24,8 @@ def start_explore(seed, state):
 
             # This is a temporary method that will spit out useful data for
             # understanding the value of a turn
-            evaluator.get_turn_summary(seed, depth)
+            if depth > 0:
+                evaluator.get_turn_summary(seed, depth)
 
             # Players can pass up to (60-7)*2 times. Those branches and many others
             # are quite uninteresting, so we're only going to go so far
