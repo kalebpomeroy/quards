@@ -1,4 +1,4 @@
-from quards.evaluator import lorcana
+from quards.state_machine.evaluator import lorcana
 
 evaluators = [lorcana]
 

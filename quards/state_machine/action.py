@@ -1,6 +1,6 @@
-from quards.state import State
-from quards.database import model
-from quards.evaluator import get_evaluator
+from quards.state_machine.state import State
+from quards.state_machine.database import model
+from quards.state_machine.evaluator import get_evaluator
 import copy
 
 

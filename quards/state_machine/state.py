@@ -1,7 +1,7 @@
 import json
 import hashlib
-from quards.database import model
-from quards.evaluator import get_evaluator
+from quards.state_machine.database import model
+from quards.state_machine.evaluator import get_evaluator
 
 
 class State:

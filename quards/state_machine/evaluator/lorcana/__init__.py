@@ -1,8 +1,8 @@
-from quards.evaluator.lorcana import game
-from quards.evaluator.lorcana.deck import Deck
-from quards.evaluator.lorcana import game
-from quards.evaluator.lorcana import diviner
-from quards.database import model
+from quards.state_machine.evaluator.lorcana import game
+from quards.state_machine.evaluator.lorcana.deck import Deck
+from quards.state_machine.evaluator.lorcana import game
+from quards.state_machine.evaluator.lorcana import diviner
+from quards.state_machine.database import model
 import yaml
 from pathlib import Path
 
@@ -14,6 +14,9 @@ def get_actions(state_data):
 
 
 def execute(state_data, action, params):
+
+    # By default, we're not passing. If we do
+    state_data["pass_state"] = False
 
     after_action_state = _do_action(state_data, action, params)
 

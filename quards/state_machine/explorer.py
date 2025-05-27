@@ -1,6 +1,6 @@
-from quards.action import Action
+from quards.state_machine.action import Action
 
-from quards.evaluator import get_evaluator
+from quards.state_machine.evaluator import get_evaluator
 
 MAX_DEPTH = 5
 

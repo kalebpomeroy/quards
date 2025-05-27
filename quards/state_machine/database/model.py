@@ -3,7 +3,7 @@
 import json
 from contextlib import contextmanager
 from datetime import datetime
-from quards.database.db import get_connection
+from quards.state_machine.database.db import get_connection
 
 
 def insert_state(game, seed, state_signature, state_obj):

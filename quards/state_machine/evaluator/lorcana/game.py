@@ -1,4 +1,4 @@
-from quards.evaluator.lorcana import battlefield
+from quards.state_machine.evaluator.lorcana import battlefield
 
 
 def draw(state_data, player, count):
@@ -34,10 +34,15 @@ def pass_turn(state_data):
         state_data["error"] = "pruned"
 
     state_data["turn"] += 1
-    state_data["ink_drops_available"] = 1
+    state_data["pass_state"] = True
     state_data["current_player"], state_data["off_player"] = (
         state_data["off_player"],
         state_data["current_player"],
+    )
+
+    state_data["ink_drops_available"] = 1
+    state_data["ink_available"] = len(
+        state_data["zones"]["ink"][state_data["current_player"]]
     )
 
     battlefield.ready_for_turn(

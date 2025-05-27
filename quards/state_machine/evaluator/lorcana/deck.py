@@ -1,6 +1,6 @@
 import random
 from pathlib import Path
-from quards.evaluator.lorcana import cards
+from quards.state_machine.evaluator.lorcana import cards
 
 
 class Deck:

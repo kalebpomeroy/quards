@@ -1,4 +1,4 @@
-from quards.evaluator.lorcana import cards
+from quards.state_machine.evaluator.lorcana import cards
 
 
 def get_actions(state_data):
