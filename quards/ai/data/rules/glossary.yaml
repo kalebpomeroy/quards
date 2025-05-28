@@ -1,0 +1,120 @@
+-
+  rule: action
+  text: A type of card that gives its player an immediate one-time advantage. When an action is played, its player resolves its effects and then puts it in their discard pile. Actions never enter the Play zone.
+-
+  rule: activated ability
+  text: An ability that a player may use after paying its cost. An activated ability can’t be used if its cost can’t be paid. Activated abilities of items may be used during the turn the item is played.
+-
+  rule: banished
+  text: A card that is put into a player’s discard pile after it’s banished. A card can be banished as a result of abilities or effects or if it has damage equal to or greater than its Willpower {W}.
+-
+  rule: challenge
+  text: When a player exerts one of their dry characters and chooses an exerted opposing character or an opposing location. Each character deals damage equal to their Strength {S} to the other character or the location. A character chosen by the active player to challenge an opposing character or location is the challenging character. A challenging character is considered “in a challenge” throughout the duration of the challenge.
+-
+  rule: cost
+  text: What is required in order to play a card or use an activated ability. This may be an ink cost or an alternate cost such as exerting a character. An activated ability can’t be used if its full cost can’t be paid.
+-
+  rule: damage
+  text: Damage on a character or location is represented by damage counters and counts against its Willpower {W}. Damage is dealt by characters in a challenge and by some effects. When a card with damage moves from in play to any other zone, the damage ceases to exist.
+-
+  rule: discard (noun)
+  text: noun. The single faceup pile where actions are put after they’ve finished resolving and where other cards are put after being banished from play or discarded. When a player puts a card from their hand into their discard, they’re discarding that card. The discard is considered a public zone.
+- 
+  rule: discard (verb)
+  text: verb. When a player chooses 1 or more cards from their hand and puts them into their discard pile. A player can discard only from their hand.
+-
+  rule: exert
+  text: To turn a card sideways, such as to quest, challenge, or pay the cost of a card or ability. Some abilities use the {E} symbol to show that the card must be exerted as part of the ability’s cost. While a card is exerted, its player may still use abilities on it that don’t require them to {E}.
+-
+  rule: exerted
+  text: A card that has been turned sideways.
+-
+  rule: ink
+  text: The resource that players use to pay the cost of playing cards and using certain abilities. A player’s ink is represented by the cards they’ve put into their inkwell.
+-
+  rule: inkwell
+  text: The private zone where a player puts their ink cards, facedown. Each card in a player’s inkwell represents 1 {I}, no matter what’s on the front of the card, and players can’t look at the front of the cards in any inkwell.
+-
+  rule: item
+  text: A card that lists “Item” on its classification line. When a player plays an item, they put it in their Play zone, where it remains until it’s banished or removed from play by a game effect. Items can be exerted during the turn they’re played. A player can’t have more than 4 copies of an item with the same name in their deck.
+-
+  rule: keyword ability
+  text: An ability or abilities represented by a short, bolded name that is the same wherever the ability appears. Examples of keyword abilities include Bodyguard, Challenger, Evasive, Reckless, and Rush.
+-
+  rule: location
+  text: A card that lists “Location” on its classification line. When a player plays a location, they put it in their Play zone. Locations have a cost to play, a move cost to move a character to the location, and Willpower {W}. Locations can be challenged; 
+-
+  rule: lore
+  text: The resource players race to gain as they play. The first player to reach 20 lore wins the game.
+-
+  rule: Lore value {L}
+  text: A card characteristic that indicates the amount of lore its player can gain from it each turn. If it’s a character, the lore is gained by questing. If it’s a location, the lore is gained at the start of its player’s turn during the Set step.
+-
+  rule: move cost {M}
+  text: The cost to move one of your characters to one of your locations.
+-
+  rule: name
+  text: A card’s name appears in large text above its classification line. On actions, items, and locations, the name is located in the center of the card. On characters, the name is located on the left of the card, across from its {S} and {W}. A character’s or location’s name and version together make up the card’s full name.
+-
+  rule: opposing character
+  text: A character played by an opponent.
+-
+  rule: opposing player
+  text: Anyone a player is playing against. Also known as opponent.
+-
+  rule: phase
+  text: One of the three main parts of a turn. The phases of a player’s turn are the Beginning Phase, Main Phase, and End of Turn Phase.
+-
+  rule: play
+  text: The act of playing a card. A card can only be played from a player’s hand. If the card played is an action, the player reveals the card, pays its cost, resolves its effects, and then discards it. If the card played is a character, item, or location, the player reveals the card, pays its cost, and puts that card into play.
+-
+  rule: quest
+  text: When a player exerts a character to gain lore equal to that character’s Lore value {L}. A character can’t quest the same turn it’s played.
+-
+  rule: ready
+  text: A card that has been put in the ready position (upright) or the act of putting a card in the ready position. A player readies all of their exerted cards in the Ready step of their turn.
+-
+  rule: replacement effect
+  text: An effect generated by some static abilities that replaces one effect with another.
+-
+  rule: reveal
+  text: Showing the face of a card or cards defined in the effect to all other players.
+-
+  rule: shuffle
+  text: Randomizing the order of cards in a deck.
+-
+  rule: song
+  text: A type of action that can be played by exerting characters or by paying the song’s ink cost.
+-
+  rule: starting hand
+  text: The initial 7 cards that a player draws at the start of the game, before they choose whether to alter their hand.
+-
+  rule: starting player
+  text: The player who takes the first turn of the game, determined randomly before the game begins. The starting player doesn’t draw on that turn.
+-
+  rule: static ability
+  text: An effect that could alter characteristics of a card, game rule, or game state. A static ability is continuously active, either for a fixed length of time  or for as long as the card generating the effect is in play.
+-
+  rule: Strength {S}
+  text: The amount of damage a character deals in a challenge. A character’s Strength {S} may be referenced in abilities or effects.
+-
+  rule: top card
+  text: A card that’s on top of all other cards in a stack.
+-
+  rule: triggered ability
+  text: An ability that causes an effect to be added to the bag when a particular condition is met. Triggered abilities start with “When,” “Whenever,” “At the start of,” or “At the end of” and describe the game state that causes the abilities to trigger and the effects of the abilities. When an ability triggers, its effect is placed into the bag to be resolved.
+-
+  rule: turn
+  text: The unit of time each player takes to complete the following three phases - Beginning Phase, Main Phase, and End of Turn phase. Each player takes their turn before passing the turn to the next player.
+-
+  rule: turn action
+  text: An action that the game allows a player to take during the Main Phase of their turn. A player may take any number of turn actions on their turn, in any order. Turn actions include putting a card into the inkwell, playing a card, questing, challenging, moving a character to a location, and using activated abilities.
+-
+  rule: version
+  text: A descriptor that can differentiate cards with the same name for purposes of building a deck. A character’s or location’s name and version together constitute the card’s full name.
+-
+  rule: Willpower {W}
+  text: How much damage it takes to banish a character or location.
+-
+  rule: zone
+  text: A physical or nonphysical space used for gameplay purposes. Whether a zone is public or is private determines what information can be shared about the cards there. Each player’s zones are - deck, hand, play, inkwell, discard, and bag. All zones are considered separate from one another.

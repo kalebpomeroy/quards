@@ -1,2 +1,7 @@
+einops
+numpy
 psycopg2-binary
 pyyaml
+transformers 
+sentence-transformers 
+torch
