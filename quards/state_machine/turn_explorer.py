@@ -1,11 +1,9 @@
-from quards.action import Action
+from quards.state_machine.action import Action
 
-from quards.evaluator import get_evaluator
-
-MAX_DEPTH = 5
+from quards.state_machine.evaluator import get_evaluator
 
 
-def start_turn_explore(seed, state):
+def explore(seed, state):
 
     # Given a state create all actions from this state on.
     this_turn = state.data["turn"]

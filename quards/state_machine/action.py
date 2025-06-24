@@ -6,7 +6,7 @@ import copy
 
 # NOTE on terminology:
 # Actions are simply edges that connect state. Most of the application we use
-# the word action as it's more consistent with how a user things of the map.
+# the word action as it's more consistent with how a user thinks of the map.
 # Within the context of the Action, we start being a little more explicit about
 # edges and traversals using graph language
 class Action:

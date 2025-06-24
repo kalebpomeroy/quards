@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     state = State.from_id(seed, sys.argv[1])
 
-    turn_explorer.start_turn_explore(seed, state)
+    turn_explorer.explore(seed, state)
 
     next_turn = model.get_states_for_turn(seed, state.data["turn"] + 3)
 

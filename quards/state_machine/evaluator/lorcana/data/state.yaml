@@ -1,0 +1,58 @@
+zones:  
+    
+    # Hands, decks and discards are ordered list of card Unique_IDs
+    hands:
+        player1: [
+            # "ARI-014", "ROF-129"
+        ]
+
+        # By default, hands are empty and that's often fine (simplier the better)
+        player2: [
+        ]
+
+    # By default, they are empty. If you a player draws and they are empty, that
+    # would result in a loss, probably not ideal. Make sure this is set to something
+    # for player1 since the start of turn draws a card
+    decks:
+        player1: []
+        player2: []
+
+    # By default, this is empty and that's usually fine. 
+    discard:
+        player1: []
+        player2: []
+
+    # battlefield will be a list of game-objects that have state beyond 
+    # just being a card, including damage, rushiness, location, etc
+    battlefield:
+        player1: [
+          {
+            # "card": "ARI-014"
+            # "dmg": 0
+            # "exerted": false
+            # "turn_effects": []
+          }
+        ]
+        player2: []
+
+# Integers for each player, max 20, never negative, whole numbers
+lore:
+    player1: 0
+    player2: 0
+# Number of cards in inkwell. Positive integer rarely more than 10
+inkwell:
+    player1: 0
+    player2: 0
+
+# Most times, the first action will be "start" to reset all of these 
+# numbers, but theoretically could start mid turn if we wanted to
+ink_drops_available: 0
+ink_available: 0
+
+# Internal; these are non accessible via the API
+bag: []
+current_player: player1
+off_player: player2
+turn: 0
+winner: ""
+complete: false
