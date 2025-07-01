@@ -335,6 +335,9 @@ def main():
     st.title("Lorcana Deck Comparator")
     st.markdown(
         f"""<style>
+        .stAlert {{
+            display: none
+        }}
         .hover-zoom {{
             transition: transform 0.2s ease;
         }}
