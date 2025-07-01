@@ -2,23 +2,23 @@ import streamlit as st
 import math
 from collections import Counter
 import requests
+import urllib.parse
+import base64
 
 cards = None
 cards_by_name = None
 
 
+@st.cache_data
 def load_cards():
-    global cards, cards_by_name
     resp = requests.get("https://api.lorcana-api.com/bulk/cards")
     resp.raise_for_status()
     cards = resp.json()
-    cards_by_name = {card["Name"].lower(): card for card in cards}
+    return {card["Name"].lower(): card for card in cards}
 
 
 def by_name(name):
-    if cards_by_name is None:
-        load_cards()
-    return cards_by_name.get(name.lower(), None)
+    return load_cards().get(name.lower(), None)
 
 
 A = "A"
@@ -54,6 +54,7 @@ def parse_deck(text):
     for line in text.strip().splitlines():
         if not line.strip():
             continue
+        print("LINE: ", line)
         count, name = line.strip().split(" ", 1)
         deck[name.strip()] += int(count)
     return deck
@@ -90,10 +91,10 @@ def get_deck_stats(deck):
     return (nonink, ink), types
 
 
-def render_deck_input(label, cls_name):
+def render_deck_input(key, label, deck):
 
-    name = st.text_input(f"{label} Name") or label
-    text = st.text_area(f"{label} List", height=300)
+    name = st.text_input("Name", value=label, key=key)
+    text = st.text_area("List", value=deck, height=300, key=f"{key}-deck")
     return name, parse_deck(text) if text else None
 
 
@@ -109,7 +110,7 @@ def render_ink_bar(inks):
             <div style="height: {100 - percent}%; background-color: #4ab1f1; display: flex; flex-direction: column; justify-content: flex-end; text-align: center; font-size: 20px; color: black;">
                 <div>{inkable}</div>
                 <div style="font-style: italic; padding: 4px 0 8px 0; font-size: 14px;">
-                    {total} cards ({percent}% inkable)
+                    {total} cards ({int(percent)}% inkable)
                 </div>
             </div>
             <div style="flex: 1; background-color: #f4a6a6; text-align: center; font-size: 20px; color: black;">
@@ -286,61 +287,125 @@ def render_card_grid(titles, card_tuples, get_image_fn, diff_mode=False):
         )
 
 
-# Main App UI
-st.title("Lorcana Deck Comparator")
-st.markdown(
-    f"""<style>
-    .hover-zoom {{
-        transition: transform 0.2s ease;
-    }}
-    .hover-zoom:hover {{
-        transform: scale(2.5);
-        z-index: 100;
-        position: relative;
-    }}
-    .deck_a textarea {{
-            background-color: {COLORS[A][LIGHT]} !important;
-            color: white !important;
-    }}
-    .deck_b textarea {{
-            background-color: {COLORS[B][LIGHT]} !important;
-            color: white !important;
-    }}
-    </style>""",
-    unsafe_allow_html=True,
-)
-columns = st.columns(2)
-with columns[0]:
-    deck1_name, deck1 = render_deck_input("Deck A", "deck_a")
-with columns[1]:
-    deck2_name, deck2 = render_deck_input("Deck B", "deck_b")
+def load_from_url():
+    query = st.experimental_get_query_params()
+    deck_a = ""
+    deck_b = ""
+    from pprint import pprint
 
-if deck1 and deck2:
-    diff, same, drops = get_diff(deck1, deck2)
-    d1_ink, d1_types = get_deck_stats(deck1)
-    d2_ink, d2_types = get_deck_stats(deck2)
+    print("QUERY.a: ", query.get("a"))
+    print("QUERY.b: ", query.get("b"))
+    print("QUERY.la: ", query.get("la"))
+    print("QUERY.lb: ", query.get("lb"))
 
+    if "a" in query:
+        print("QUERY: ", query.get("a"))
+        deck_a = base64.urlsafe_b64decode(query.get("a", [""])[0].encode()).decode()
+
+    if "b" in query:
+        deck_b = base64.urlsafe_b64decode(query.get("b", [""])[0].encode()).decode()
+
+    print("DECK.a: ", deck_a)
+    print("DECK.b: ", deck_b)
+    label_a = query.get("la", ["Deck A"])[0]
+    label_b = query.get("lb", ["Deck B"])[0]
+    return deck_a, deck_b, label_a, label_b
+
+
+def update_page_url(deck1, deck2, deck1_name, deck2_name):
+    params = {
+        "a": base64.urlsafe_b64encode(
+            "\n".join([f"{c} {name}" for name, c in deck1.items()]).encode()
+        ).decode(),
+        "b": base64.urlsafe_b64encode(
+            "\n".join([f"{c} {name}" for name, c in deck2.items()]).encode()
+        ).decode(),
+        "la": deck1_name,
+        "lb": deck2_name,
+    }
+    # st.query_params = params
+    st.experimental_set_query_params(**params)  # Updates browser URL visibly
+
+
+def main():
+    # Main App UI
+    if st.button("Clear cache"):
+        st.cache_data.clear()
+
+    st.title("Lorcana Deck Comparator")
+    st.markdown(
+        f"""<style>
+        .hover-zoom {{
+            transition: transform 0.2s ease;
+        }}
+        .hover-zoom:hover {{
+            transform: scale(2.5);
+            z-index: 100;
+            position: relative;
+        }}
+        .deck_a textarea {{
+                background-color: {COLORS[A][LIGHT]} !important;
+                color: white !important;
+        }}
+        .deck_b textarea {{
+                background-color: {COLORS[B][LIGHT]} !important;
+                color: white !important;
+        }}
+        </style>""",
+        unsafe_allow_html=True,
+    )
+
+    if "initialized" not in st.session_state:
+        deck_a_value, deck_b_value, label_a_value, label_b_value = load_from_url()
+        st.session_state.initialized = True
+    else:
+        deck_a_value = st.session_state.get("deck_a", "")
+        deck_b_value = st.session_state.get("deck_b", "")
+        label_a_value = st.session_state.get("label_a", "Deck A")
+        label_b_value = st.session_state.get("label_b", "Deck B")
+
+    columns = st.columns(2)
     with columns[0]:
-        render_ink_bar(d1_ink)
-        render_type_pie(d1_types)
+        deck1_name, deck1 = render_deck_input(
+            "A", label_a_value or "", deck_a_value or ""
+        )
     with columns[1]:
-        render_ink_bar(d2_ink)
-        render_type_pie(d2_types)
+        deck2_name, deck2 = render_deck_input(
+            "B", label_b_value or "", deck_b_value or ""
+        )
 
-    render_card_grid(
-        [f"Only in {deck1_name}", f"Only in {deck2_name}"],
-        drops,
-        lambda name: by_name(name)["Image"] if by_name(name) else None,
-    )
-    render_card_grid(
-        [f"{deck1_name} has more...", f"{deck2_name} has more..."],
-        diff,
-        lambda name: by_name(name)["Image"] if by_name(name) else None,
-        diff_mode=True,
-    )
+    if deck1 and deck2:
 
-    render_card_grid(
-        ["Both Decks have these same cards"],
-        same,
-        lambda name: by_name(name)["Image"] if by_name(name) else None,
-    )
+        update_page_url(deck1, deck2, deck1_name, deck2_name)
+        diff, same, drops = get_diff(deck1, deck2)
+        d1_ink, d1_types = get_deck_stats(deck1)
+        d2_ink, d2_types = get_deck_stats(deck2)
+
+        with columns[0]:
+            render_ink_bar(d1_ink)
+            render_type_pie(d1_types)
+        with columns[1]:
+            render_ink_bar(d2_ink)
+            render_type_pie(d2_types)
+
+        render_card_grid(
+            [f"Only in {deck1_name}", f"Only in {deck2_name}"],
+            drops,
+            lambda name: by_name(name)["Image"] if by_name(name) else None,
+        )
+        render_card_grid(
+            [f"{deck1_name} has more...", f"{deck2_name} has more..."],
+            diff,
+            lambda name: by_name(name)["Image"] if by_name(name) else None,
+            diff_mode=True,
+        )
+
+        render_card_grid(
+            ["Both Decks have these same cards"],
+            same,
+            lambda name: by_name(name)["Image"] if by_name(name) else None,
+        )
+
+
+if __name__ == "__main__":
+    main()
