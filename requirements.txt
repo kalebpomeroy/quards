@@ -4,4 +4,5 @@ psycopg2-binary
 pyyaml
 transformers 
 sentence-transformers 
+streamlit
 torch

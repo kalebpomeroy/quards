@@ -59,17 +59,18 @@ def format_card(card):
     return f" {fix_name(card["Name"])} {card['Cost']} Cost {get_color_jargon(card['Color'])} {card['Type']}.  lore. {get_stats(card)} Text: {fix_text(card.get('Body_Text', ""))}"
 
 
-with open("data/cards.json") as f:
-    cards = json.load(f)
+def generate():
+    with open("data/cards.json") as f:
+        cards = json.load(f)
 
-texts = [format_card(card) for card in cards]
-# [print(text, "\n") for text in texts]
+    texts = [format_card(card) for card in cards]
+    # [print(text, "\n") for text in texts]
 
-vectors = model.encode(texts, batch_size=16, show_progress_bar=True)
-embedded_cards = [
-    {"name": cards[i]["Name"], "text": texts[i], "vector": vectors[i].tolist()}
-    for i in range(len(cards))
-]
+    vectors = model.encode(texts, batch_size=16, show_progress_bar=True)
+    embedded_cards = [
+        {"name": cards[i]["Name"], "text": texts[i], "vector": vectors[i].tolist()}
+        for i in range(len(cards))
+    ]
 
-with open("data/card_vectors.json", "w") as f:
-    json.dump(embedded_cards, f)
+    with open("data/card_vectors.json", "w") as f:
+        json.dump(embedded_cards, f)
