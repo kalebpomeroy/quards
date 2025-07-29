@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games - Quards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .nav {
+            background: #333;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .nav a:hover {
+            background: #555;
+        }
+        
+        .nav a.active {
+            background: #4CAF50;
+        }
+        
+        .filters {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-group label {
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .filter-input {
+            padding: 8px 12px;
+            background: #222;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 4px;
+            min-width: 150px;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .clear-filters {
+            background: #666;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+        
+        .clear-filters:hover {
+            background: #777;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .game-card {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .game-card:hover {
+            background: #444;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .game-id {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .game-date {
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .game-matchup {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .player-info {
+            text-align: center;
+        }
+        
+        .player-info.player1 {
+            text-align: left;
+        }
+        
+        .player-info.player2 {
+            text-align: right;
+        }
+        
+        .deck-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .deck-description {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .vs {
+            font-size: 20px;
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .game-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .no-games {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+            background: #333;
+            border-radius: 8px;
+        }
+        
+        .filtered-message {
+            background: #2a3a2a;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/nav.html">Home</a>
+            <a href="/">Game Viewer</a>
+            <a href="/decks.html">Decks</a>
+            <a href="/games.html" class="active">Games</a>
+        </nav>
+        
+        <h1>Games</h1>
+        
+        <div class="filters">
+            <div class="filter-group">
+                <label for="deckFilter">Filter by Deck</label>
+                <select id="deckFilter" class="filter-input">
+                    <option value="">All decks</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="playerFilter">Filter by Player</label>
+                <select id="playerFilter" class="filter-input">
+                    <option value="">Any player</option>
+                    <option value="1">Player 1</option>
+                    <option value="2">Player 2</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="dateFilter">Date Range</label>
+                <select id="dateFilter" class="filter-input">
+                    <option value="">All time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This week</option>
+                    <option value="month">This month</option>
+                </select>
+            </div>
+            
+            <button class="clear-filters" onclick="clearFilters()">Clear Filters</button>
+        </div>
+        
+        <div id="filteredMessage" class="filtered-message" style="display: none;"></div>
+        
+        <div class="games-grid" id="gamesGrid">
+            <!-- Games will be loaded here -->
+        </div>
+    </div>
+    
+    <script src="games.js"></script>
+</body>
+</html>

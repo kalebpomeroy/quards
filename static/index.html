@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quards Game Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .nav {
+            background: #333;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .nav a:hover {
+            background: #555;
+        }
+        
+        .nav a.active {
+            background: #4CAF50;
+        }
+        
+        .controls {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .timeline {
+            flex: 1;
+            background: #555;
+            height: 40px;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .timeline-progress {
+            background: #4CAF50;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.2s;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: #fff;
+            cursor: pointer;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: 1fr 300px 1fr;
+            gap: 20px;
+        }
+        
+        .history-panel {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            height: 600px;
+            overflow-y: auto;
+        }
+        
+        .history-panel h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        
+        .history-entry {
+            background: #222;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #4CAF50;
+        }
+        
+        .history-entry.current {
+            background: #2a4d2a;
+            border-left-color: #8BC34A;
+        }
+        
+        .player {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .player h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+        
+        .player-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stat-box {
+            background: #222;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .stat-box .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .stat-box .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .zone {
+            margin-bottom: 20px;
+        }
+        
+        .zone h3 {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+        
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            min-height: 60px;
+            background: #222;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .card {
+            width: 50px;
+            height: 70px;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .card.exhausted {
+            transform: rotate(90deg);
+        }
+        
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .card-back {
+            background: #654321;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            border: 1px solid #8B4513;
+        }
+        
+        .card-count {
+            background: #666;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .deck-count {
+            background: #654321;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            border: 2px solid #8B4513;
+        }
+        
+        .card-detail {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 1001;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .card-detail.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .card-detail img {
+            width: 100%;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .card-detail h4 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+        
+        .card-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .stat {
+            background: #222;
+            padding: 5px;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .step-info {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: #000;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .card:hover .tooltip {
+            opacity: 1;
+        }
+        
+        .available-actions {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .available-actions h2 {
+            margin: 0 0 15px 0;
+            color: #4CAF50;
+            border-bottom: 1px solid #4CAF50;
+            padding-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        
+        .action-section {
+            background: #222;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        
+        .action-category {
+            font-weight: bold;
+            color: #4CAF50;
+            font-size: 11px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .action-cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            min-height: 30px;
+        }
+        
+        .empty-action-section {
+            color: #666;
+            font-style: italic;
+            font-size: 10px;
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-card-image {
+            position: relative;
+            width: 32px;
+            height: 45px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+        
+        .action-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 2px;
+        }
+        
+        .action-card-image.executable {
+            border-color: #4CAF50;
+        }
+        
+        .action-card-image.executable:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.4);
+            z-index: 10;
+        }
+        
+        .action-card-image.chosen {
+            border-color: #2196F3;
+            background: rgba(33, 150, 243, 0.2);
+            box-shadow: 0 0 6px rgba(33, 150, 243, 0.6);
+        }
+        
+        .action-card-image.chosen:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.8);
+            z-index: 10;
+        }
+        
+        .action-card-image.alternative {
+            border-color: #666;
+            opacity: 0.4;
+        }
+        
+        .pass-button {
+            background: #333;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 11px;
+            width: 100%;
+        }
+        
+        .executable .pass-button {
+            border-color: #4CAF50;
+            background: #2a4d2a;
+        }
+        
+        .executable .pass-button:hover {
+            background: #3a5d3a;
+            transform: scale(1.05);
+        }
+        
+        .chosen .pass-button {
+            border-color: #2196F3;
+            background: #1a3a5c;
+            box-shadow: 0 0 6px rgba(33, 150, 243, 0.6);
+        }
+        
+        .chosen .pass-button:hover {
+            background: #2a4a6c;
+            transform: scale(1.05);
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.8);
+        }
+        
+        .alternative .pass-button {
+            border-color: #666;
+            opacity: 0.4;
+        }
+        
+        .card-tooltip {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 100;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .action-card-image:hover .card-tooltip {
+            opacity: 1;
+        }
+        
+        
+        .action-card {
+            background: #222;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .action-card:hover {
+            background: #333;
+        }
+        
+        .action-card.valid {
+            border-color: #4CAF50;
+        }
+        
+        .action-card.valid:hover {
+            background: #2a4d2a;
+        }
+        
+        .action-card.invalid {
+            border-color: #666;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .action-card.invalid:hover {
+            background: #222;
+        }
+        
+        .action-card.past-action {
+            border-color: #666;
+            opacity: 0.7;
+            background: #1a1a1a;
+        }
+        
+        .action-card.past-action:hover {
+            background: #2a2a2a;
+            opacity: 0.9;
+        }
+        
+        .fork-hint {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .action-options {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .truncate-btn, .fork-btn {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .truncate-btn {
+            background: #ff6666;
+            color: white;
+        }
+        
+        .truncate-btn:hover {
+            background: #ff4444;
+        }
+        
+        .fork-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .fork-btn:hover {
+            background: #45a049;
+        }
+        
+        .action-card.chosen-action {
+            border-color: #2196F3;
+            background: #1a3a5c;
+        }
+        
+        .action-card.chosen-action:hover {
+            background: #2a4a6c;
+        }
+        
+        .chosen-hint {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: #64B5F6;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+            background: rgba(33, 150, 243, 0.2);
+            padding: 1px 4px;
+            border-radius: 2px;
+            border: 1px solid #2196F3;
+            max-width: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .action-type {
+            font-weight: bold;
+            color: #4CAF50;
+            text-transform: uppercase;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .action-description {
+            margin-bottom: 10px;
+        }
+        
+        .action-reason {
+            font-size: 12px;
+            color: #ff6666;
+            font-style: italic;
+        }
+        
+        .current-player {
+            background: #2a4d2a;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .zone-tooltip {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 500px;
+            max-height: 600px;
+            overflow-y: auto;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .zone-tooltip.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .zone-tooltip-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .zone-tooltip-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .zone-tooltip-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #222;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        
+        .zone-tooltip-card img {
+            width: 60px;
+            height: 84px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .zone-tooltip-card span {
+            font-size: 12px;
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/nav.html">Home</a>
+            <a href="/" class="active">Game Viewer</a>
+            <a href="/decks.html">Decks</a>
+            <a href="/games.html">Games</a>
+        </nav>
+        
+        <h1>Quards Game Viewer</h1>
+        
+        <div class="controls">
+            <button onclick="previousStep()">← Previous</button>
+            <button onclick="nextStep()">Next →</button>
+            <span id="stepCounter">Step 0 / 0</span>
+            <div class="timeline" onclick="seekToPosition(event)">
+                <div class="timeline-progress" id="timelineProgress"></div>
+            </div>
+            <button onclick="playPause()" id="playButton">Play</button>
+        </div>
+        
+        <div class="step-info" id="stepInfo">
+            <strong>Game Start</strong>
+        </div>
+        
+        <div class="available-actions" id="availableActions">
+            <h2>Available Actions</h2>
+            <div class="current-player" id="currentPlayer">Current Player: Player 1</div>
+            <div class="actions-grid" id="actionsGrid">
+                <div class="action-card">
+                    <div class="action-type">Loading...</div>
+                    <div class="action-description">Loading available actions...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-board">
+            <div class="player">
+                <h2>Player 1</h2>
+                
+                <div class="player-stats">
+                    <div class="stat-box">
+                        <div class="label">Deck</div>
+                        <div class="value" id="p1-deck-count">60</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Discard</div>
+                        <div class="value" id="p1-discard-count">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Ink</div>
+                        <div class="value" id="p1-ink-count">0 / 0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Lore</div>
+                        <div class="value" id="p1-lore-count">0</div>
+                    </div>
+                </div>
+                
+                <div class="zone">
+                    <h3>Hand (<span id="p1-hand-count">0</span>)</h3>
+                    <div class="cards" id="p1-hand"></div>
+                </div>
+                
+                <div class="zone">
+                    <h3>Battlefield</h3>
+                    <div class="cards" id="p1-battlefield"></div>
+                </div>
+            </div>
+            
+            <div class="history-panel">
+                <h3>Game History</h3>
+                <div id="game-history"></div>
+            </div>
+            
+            <div class="player">
+                <h2>Player 2</h2>
+                
+                <div class="player-stats">
+                    <div class="stat-box">
+                        <div class="label">Deck</div>
+                        <div class="value" id="p2-deck-count">60</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Discard</div>
+                        <div class="value" id="p2-discard-count">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Ink</div>
+                        <div class="value" id="p2-ink-count">0 / 0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="label">Lore</div>
+                        <div class="value" id="p2-lore-count">0</div>
+                    </div>
+                </div>
+                
+                <div class="zone">
+                    <h3>Hand (<span id="p2-hand-count">0</span>)</h3>
+                    <div class="cards" id="p2-hand"></div>
+                </div>
+                
+                <div class="zone">
+                    <h3>Battlefield</h3>
+                    <div class="cards" id="p2-battlefield"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-detail" id="cardDetail">
+            <img id="cardDetailImage" src="" alt="" />
+            <h4 id="cardDetailName"></h4>
+            <div class="card-stats">
+                <div class="stat">
+                    <div>Cost</div>
+                    <div id="cardDetailCost">-</div>
+                </div>
+                <div class="stat">
+                    <div>Strength</div>
+                    <div id="cardDetailStrength">-</div>
+                </div>
+                <div class="stat">
+                    <div>Willpower</div>
+                    <div id="cardDetailWillpower">-</div>
+                </div>
+            </div>
+            <div class="stat">
+                <div>Lore</div>
+                <div id="cardDetailLore">-</div>
+            </div>
+            <div style="margin-top: 15px;">
+                <strong>Type:</strong> <span id="cardDetailType"></span><br>
+                <strong>Color:</strong> <span id="cardDetailColor"></span><br>
+                <strong>Rarity:</strong> <span id="cardDetailRarity"></span>
+            </div>
+            <div style="margin-top: 15px;" id="cardDetailBodyText"></div>
+            <div style="margin-top: 15px; font-style: italic;" id="cardDetailFlavorText"></div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

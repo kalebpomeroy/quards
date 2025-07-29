@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deck Manager - Quards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .nav {
+            background: #333;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .nav a:hover {
+            background: #555;
+        }
+        
+        .nav a.active {
+            background: #4CAF50;
+        }
+        
+        .deck-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .deck-card {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .deck-card:hover {
+            background: #444;
+        }
+        
+        .deck-card h3 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+        
+        .deck-card .description {
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+        
+        .deck-card .meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .deck-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .btn.danger {
+            background: #f44336;
+        }
+        
+        .btn.danger:hover {
+            background: #d32f2f;
+        }
+        
+        .btn.secondary {
+            background: #666;
+        }
+        
+        .btn.secondary:hover {
+            background: #777;
+        }
+        
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: #333;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: white;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/nav.html">Home</a>
+            <a href="/">Game Viewer</a>
+            <a href="/decks.html" class="active">Decks</a>
+            <a href="/games.html">Games</a>
+        </nav>
+        
+        <h1>Deck Manager</h1>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="/create-game.html" class="btn" style="font-size: 18px; padding: 15px 30px;">Create New Game</a>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>Your Decks</h2>
+            <button class="btn" id="createDeckBtn">Create New Deck</button>
+        </div>
+        
+        <div class="deck-grid" id="deckGrid">
+            <!-- Decks will be loaded here -->
+        </div>
+    </div>
+    
+    <!-- Deck Detail Modal -->
+    <div id="deckModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <h2 id="modalDeckName">Deck Name</h2>
+            <p id="modalDeckDescription">Deck description...</p>
+            <div id="modalDeckCards">
+                <!-- Card list will be shown here -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="decks.js"></script>
+</body>
+</html>

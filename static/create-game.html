@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Game - Quards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .nav {
+            background: #333;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .nav a:hover {
+            background: #555;
+        }
+        
+        .nav a.active {
+            background: #4CAF50;
+        }
+        
+        .form-section {
+            background: #333;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .form-section h2 {
+            color: #4CAF50;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: #222;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .form-group .help-text {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .deck-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .deck-select-area {
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .deck-select-area h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        
+        .selected-deck-info {
+            background: #2a4d2a;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .game-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .game-type-option {
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .game-type-option:hover {
+            background: #333;
+        }
+        
+        .game-type-option.selected {
+            border-color: #4CAF50;
+            background: #2a4d2a;
+        }
+        
+        .game-type-option h4 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+        
+        .game-type-option p {
+            margin: 0;
+            color: #ccc;
+            font-size: 14px;
+        }
+        
+        .seed-section {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .seed-section.hidden {
+            display: none;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .btn.secondary {
+            background: #666;
+        }
+        
+        .btn.secondary:hover {
+            background: #777;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        
+        .warning {
+            background: #663d00;
+            border: 1px solid #b36600;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .warning h4 {
+            margin: 0 0 10px 0;
+            color: #ffb366;
+        }
+        
+        .option-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            background: #222;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .tab-btn:hover {
+            background: #333;
+        }
+        
+        .tab-btn.active {
+            background: #4CAF50;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .file-input {
+            background: #222 !important;
+            color: white !important;
+        }
+        
+        .upload-section {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/nav.html">Home</a>
+            <a href="/create-game.html" class="active">Create Game</a>
+            <a href="/decks.html">Decks</a>
+            <a href="/games.html">Games</a>
+        </nav>
+        
+        <h1>Create New Game</h1>
+        
+        <div class="form-section">
+            <h2>Game Creation Options</h2>
+            <div class="option-tabs">
+                <button class="tab-btn active" onclick="switchTab('generate')">Generate New Game</button>
+                <button class="tab-btn" onclick="switchTab('upload')">Upload Game Log</button>
+            </div>
+        </div>
+        
+        <div id="generateTab" class="tab-content active">
+            
+            <div class="form-section">
+                <h2>Deck Selection</h2>
+                <div class="deck-selector">
+                    <div class="deck-select-area">
+                        <h3>Player 1 Deck</h3>
+                        <select id="player1Deck">
+                            <option value="">Select a deck...</option>
+                        </select>
+                        <div class="selected-deck-info" id="player1Info"></div>
+                    </div>
+                    <div class="deck-select-area">
+                        <h3>Player 2 Deck</h3>
+                        <select id="player2Deck">
+                            <option value="">Select a deck...</option>
+                        </select>
+                        <div class="selected-deck-info" id="player2Info"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section seed-section" id="seedSection">
+                <h2>Game Seed</h2>
+                <div class="warning">
+                    <h4>⚠️ Seed Information</h4>
+                    <p>The seed controls deck shuffling and random events. Games with the same decks and seed will play identically. Leave blank for a random seed.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="gameSeed">Seed (Optional)</label>
+                    <input type="text" id="gameSeed" placeholder="Leave blank for random seed">
+                    <div class="help-text">UUID or string to seed the random number generator</div>
+                </div>
+                
+                <div class="form-group">
+                    <button type="button" class="btn secondary" id="generateSeedBtn">Generate Random Seed</button>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <a href="/nav.html" class="btn secondary">Cancel</a>
+                <button type="button" class="btn" id="createGameBtn" disabled>Create Game</button>
+            </div>
+        </div>
+        
+        <div id="uploadTab" class="tab-content">
+            <div class="form-section">
+                <div class="upload-section">
+                    <h2>Upload Game Log</h2>
+                    <div class="form-group">
+                        <label for="gameLogFile">Game Log File</label>
+                        <input type="file" id="gameLogFile" accept=".log,.txt" class="file-input">
+                        <div class="help-text">Upload a game log file to analyze an existing game</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <a href="/nav.html" class="btn secondary">Cancel</a>
+                <button type="button" class="btn" id="uploadGameBtn" onclick="uploadGame()" disabled>Upload Game</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="create-game.js"></script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deck Editor - Quards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .nav {
+            background: #333;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .nav a:hover {
+            background: #555;
+        }
+        
+        .nav a.active {
+            background: #4CAF50;
+        }
+        
+        .form-section {
+            background: #333;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .form-section h2 {
+            color: #4CAF50;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: #222;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .form-group .help-text {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .card-input-section {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .card-input-help {
+            background: #2a3a2a;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .card-input-help h4 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+        
+        .card-counter {
+            background: #222;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .card-counter .count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .card-counter .label {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .validation-errors {
+            background: #442222;
+            border: 1px solid #aa4444;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .validation-errors h4 {
+            margin: 0 0 10px 0;
+            color: #ff6666;
+        }
+        
+        .validation-errors ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .validation-errors li {
+            color: #ffaaaa;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .btn.secondary {
+            background: #666;
+        }
+        
+        .btn.secondary:hover {
+            background: #777;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/nav.html">Home</a>
+            <a href="/index.html">Game Viewer</a>
+            <a href="/decks.html" class="active">Decks</a>
+            <a href="/games.html">Games</a>
+        </nav>
+        
+        <h1 id="pageTitle">Create New Deck</h1>
+        
+        <div class="form-section">
+            <h2>Deck Information</h2>
+            
+            <div class="form-group">
+                <label for="deckName">Deck Name</label>
+                <input type="text" id="deckName" placeholder="e.g., Aggro Red" required>
+                <div class="help-text">A unique name for this deck</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="deckDescription">Description</label>
+                <textarea id="deckDescription" rows="3" placeholder="Describe the deck's strategy, key cards, or notes..."></textarea>
+                <div class="help-text">Optional description of the deck's purpose or strategy</div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h2>Deck Cards</h2>
+            
+            <div class="card-counter">
+                <div class="count" id="cardCount">0</div>
+                <div class="label">Total Cards (Must be 60)</div>
+            </div>
+            
+            <div class="validation-errors" id="validationErrors">
+                <h4>⚠️ Validation Errors</h4>
+                <ul id="errorList"></ul>
+            </div>
+            
+            <div class="card-input-help">
+                <h4>📝 How to Add Cards</h4>
+                <p>Enter cards one per line in the format: <code>Quantity Card Name</code></p>
+                <p><strong>Examples:</strong></p>
+                <p><code>3 Huey - Reliable Leader</code></p>
+                <p><code>4 Piglet - Pooh Pirate Captain</code></p>
+                <p><code>2 Wendy Darling - Courageous Captain</code></p>
+                <p>You need exactly 60 cards total to save the deck.</p>
+            </div>
+            
+            <div class="card-input-section">
+                <div class="form-group">
+                    <label for="cardList">Card List</label>
+                    <textarea id="cardList" rows="20" placeholder="3 Huey - Reliable Leader&#10;4 Piglet - Pooh Pirate Captain&#10;2 Wendy Darling - Courageous Captain&#10;..."></textarea>
+                    <div class="help-text">Enter each card on a new line: Quantity Card Name</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <a href="/decks.html" class="btn secondary">Cancel</a>
+            <button type="button" class="btn" id="saveDeckBtn">Save Deck</button>
+        </div>
+    </div>
+    
+    <script src="deck-editor.js"></script>
+</body>
+</html>
