@@ -105,7 +105,7 @@ func LoadDeck(name string) (*Deck, error) {
 	var cardsJSON []byte
 	
 	err := db.QueryRow(`
-		SELECT COALESCE(id, 0) as id, name, description, cards, created_at, modified_at 
+		SELECT id, name, description, cards, created_at, modified_at 
 		FROM decks WHERE name = $1`, name).Scan(
 		&deck.ID, &deck.Name, &deck.Description, &cardsJSON, &deck.Created, &deck.Modified)
 	
@@ -132,7 +132,7 @@ func LoadDeckByID(id int) (*Deck, error) {
 	var cardsJSON []byte
 	
 	err := db.QueryRow(`
-		SELECT COALESCE(id, 0) as id, name, description, cards, created_at, modified_at 
+		SELECT id, name, description, cards, created_at, modified_at 
 		FROM decks WHERE id = $1`, id).Scan(
 		&deck.ID, &deck.Name, &deck.Description, &cardsJSON, &deck.Created, &deck.Modified)
 	
@@ -156,7 +156,7 @@ func ListDecks() ([]DeckList, error) {
 	db := database.GetDB()
 	
 	rows, err := db.Query(`
-		SELECT COALESCE(id, 0) as id, name, description, cards, created_at, modified_at 
+		SELECT id, name, description, cards, created_at, modified_at 
 		FROM decks ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query decks: %w", err)

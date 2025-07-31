@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"quards/internal/database"
 
@@ -58,10 +59,19 @@ func Run() error {
 		w.Write([]byte("OK"))
 	}).Methods("GET")
 
-	port := "8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	
 	fmt.Printf("Server starting on port %s\n", port)
-	fmt.Printf("Game viewer UI: http://localhost:%s/\n", port)
-	fmt.Printf("API endpoints:\n  - http://localhost:%s/api/...\n", port)
+	fmt.Printf("Game viewer UI: http://%s:%s/\n", host, port)
+	fmt.Printf("API endpoints:\n  - http://%s:%s/api/...\n", host, port)
 
 	return http.ListenAndServe(":"+port, r)
 }
