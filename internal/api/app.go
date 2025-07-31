@@ -20,9 +20,11 @@ func Run() error {
 
 	apiRouter.HandleFunc("/decks", ListDecksHandler).Methods("GET")
 	apiRouter.HandleFunc("/decks", CreateDeckHandler).Methods("POST")
-	apiRouter.HandleFunc("/decks/{deckname}", GetDeckHandler).Methods("GET")
-	apiRouter.HandleFunc("/decks/{deckname}", UpdateDeckHandler).Methods("PUT")
-	apiRouter.HandleFunc("/decks/{deckname}", DeleteDeckHandler).Methods("DELETE")
+	apiRouter.HandleFunc("/decks/{id:[0-9]+}", GetDeckHandler).Methods("GET")
+	apiRouter.HandleFunc("/decks/{id:[0-9]+}", UpdateDeckHandler).Methods("PUT")
+	apiRouter.HandleFunc("/decks/{id:[0-9]+}", DeleteDeckHandler).Methods("DELETE")
+	// Keep legacy name-based endpoints for backward compatibility during migration
+	apiRouter.HandleFunc("/decks/name/{deckname}", GetDeckByNameHandler).Methods("GET")
 
 	// Game management endpoints
 	apiRouter.HandleFunc("/games", ListGamesHandler).Methods("GET")

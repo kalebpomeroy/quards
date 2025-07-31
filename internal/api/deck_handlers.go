@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	
 	"github.com/gorilla/mux"
 	"quards/internal/deck"
@@ -21,8 +22,28 @@ func ListDecksHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, decks)
 }
 
-// GetDeckHandler returns a specific deck
+// GetDeckHandler returns a specific deck by ID
 func GetDeckHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, "invalid deck ID", http.StatusBadRequest)
+		return
+	}
+	
+	deckData, err := deck.LoadDeckByID(id)
+	if err != nil {
+		writeError(w, fmt.Sprintf("failed to load deck: %v", err), http.StatusNotFound)
+		return
+	}
+	
+	writeResponse(w, deckData)
+}
+
+// GetDeckByNameHandler returns a specific deck by name (legacy support)
+func GetDeckByNameHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	deckName := vars["deckname"]
 	
@@ -90,15 +111,15 @@ func UpdateDeckHandler(w http.ResponseWriter, r *http.Request) {
 // DeleteDeckHandler deletes a deck
 func DeleteDeckHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	deckName := vars["deckname"]
+	idStr := vars["id"]
 	
-	// Security: basic path validation
-	if filepath.Base(deckName) != deckName {
-		writeError(w, "invalid deck name", http.StatusBadRequest)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, "invalid deck ID", http.StatusBadRequest)
 		return
 	}
 	
-	if err := deck.DeleteDeck(deckName); err != nil {
+	if err := deck.DeleteDeckByID(id); err != nil {
 		writeError(w, fmt.Sprintf("failed to delete deck: %v", err), http.StatusInternalServerError)
 		return
 	}

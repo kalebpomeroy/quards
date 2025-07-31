@@ -11,6 +11,7 @@ import (
 
 // Deck represents a constructed deck of 60 cards
 type Deck struct {
+	ID          int               `json:"id"`
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Cards       map[string]int    `json:"cards"`       // CardID -> Count
@@ -20,9 +21,10 @@ type Deck struct {
 
 // DeckList represents a simplified deck list for API responses
 type DeckList struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	CardCount   int    `json:"cardCount"`
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CardCount   int       `json:"cardCount"`
 	Created     time.Time `json:"created"`
 	Modified    time.Time `json:"modified"`
 }
@@ -103,13 +105,40 @@ func LoadDeck(name string) (*Deck, error) {
 	var cardsJSON []byte
 	
 	err := db.QueryRow(`
-		SELECT name, description, cards, created_at, modified_at 
+		SELECT COALESCE(id, 0) as id, name, description, cards, created_at, modified_at 
 		FROM decks WHERE name = $1`, name).Scan(
-		&deck.Name, &deck.Description, &cardsJSON, &deck.Created, &deck.Modified)
+		&deck.ID, &deck.Name, &deck.Description, &cardsJSON, &deck.Created, &deck.Modified)
 	
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("deck not found: %s", name)
+		}
+		return nil, fmt.Errorf("failed to load deck: %w", err)
+	}
+	
+	// Unmarshal cards JSON
+	if err := json.Unmarshal(cardsJSON, &deck.Cards); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal cards: %w", err)
+	}
+	
+	return &deck, nil
+}
+
+// LoadDeckByID loads a deck from the database by ID
+func LoadDeckByID(id int) (*Deck, error) {
+	db := database.GetDB()
+	
+	var deck Deck
+	var cardsJSON []byte
+	
+	err := db.QueryRow(`
+		SELECT COALESCE(id, 0) as id, name, description, cards, created_at, modified_at 
+		FROM decks WHERE id = $1`, id).Scan(
+		&deck.ID, &deck.Name, &deck.Description, &cardsJSON, &deck.Created, &deck.Modified)
+	
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("deck not found with ID: %d", id)
 		}
 		return nil, fmt.Errorf("failed to load deck: %w", err)
 	}
@@ -127,7 +156,7 @@ func ListDecks() ([]DeckList, error) {
 	db := database.GetDB()
 	
 	rows, err := db.Query(`
-		SELECT name, description, cards, created_at, modified_at 
+		SELECT COALESCE(id, 0) as id, name, description, cards, created_at, modified_at 
 		FROM decks ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query decks: %w", err)
@@ -136,11 +165,12 @@ func ListDecks() ([]DeckList, error) {
 	
 	var decks []DeckList
 	for rows.Next() {
+		var id int
 		var name, description string
 		var cardsJSON []byte
 		var created, modified time.Time
 		
-		err := rows.Scan(&name, &description, &cardsJSON, &created, &modified)
+		err := rows.Scan(&id, &name, &description, &cardsJSON, &created, &modified)
 		if err != nil {
 			continue // Skip invalid rows
 		}
@@ -157,6 +187,7 @@ func ListDecks() ([]DeckList, error) {
 		}
 		
 		decks = append(decks, DeckList{
+			ID:          id,
 			Name:        name,
 			Description: description,
 			CardCount:   cardCount,
@@ -184,6 +215,27 @@ func DeleteDeck(name string) error {
 	
 	if rowsAffected == 0 {
 		return fmt.Errorf("deck not found: %s", name)
+	}
+	
+	return nil
+}
+
+// DeleteDeckByID removes a deck from the database by ID
+func DeleteDeckByID(id int) error {
+	db := database.GetDB()
+	
+	result, err := db.Exec("DELETE FROM decks WHERE id = $1", id)
+	if err != nil {
+		return fmt.Errorf("failed to delete deck: %w", err)
+	}
+	
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+	
+	if rowsAffected == 0 {
+		return fmt.Errorf("deck not found with ID: %d", id)
 	}
 	
 	return nil

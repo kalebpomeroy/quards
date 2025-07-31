@@ -30,12 +30,12 @@ function updateDeckDropdowns() {
     
     decks.forEach(deck => {
         const option1 = document.createElement('option');
-        option1.value = deck.name;
+        option1.value = deck.id;
         option1.textContent = `${deck.name} (${deck.cardCount} cards)`;
         player1Select.appendChild(option1);
         
         const option2 = document.createElement('option');
-        option2.value = deck.name;
+        option2.value = deck.id;
         option2.textContent = `${deck.name} (${deck.cardCount} cards)`;
         player2Select.appendChild(option2);
     });
@@ -113,15 +113,15 @@ function handleDeckSelection() {
     validateForm();
 }
 
-function updateDeckInfo(elementId, deckName) {
+function updateDeckInfo(elementId, deckId) {
     const element = document.getElementById(elementId);
     
-    if (!deckName) {
+    if (!deckId) {
         element.style.display = 'none';
         return;
     }
     
-    const deck = decks.find(d => d.name === deckName);
+    const deck = decks.find(d => d.id == deckId);
     if (deck) {
         const createdDate = new Date(deck.created).toLocaleDateString();
         

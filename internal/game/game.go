@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -75,15 +76,47 @@ type GameList struct {
 
 // CreateGameRequest represents the request to create a new game
 type CreateGameRequest struct {
-	Player1Deck string `json:"player1Deck"`
-	Player2Deck string `json:"player2Deck"`
+	Player1Deck string `json:"player1Deck"` // Can be deck name or ID as string
+	Player2Deck string `json:"player2Deck"` // Can be deck name or ID as string  
 	Seed        *int   `json:"seed"`
 	LogContent  string `json:"logContent,omitempty"` // For uploaded games
+}
+
+// resolveDeckName resolves a deck identifier (name or ID as string) to a deck name
+func resolveDeckName(deckIdentifier string) (string, error) {
+	// Try to parse as integer ID first
+	if id, err := strconv.Atoi(deckIdentifier); err == nil {
+		// It's an ID, load deck by ID and return name
+		deckData, err := deck.LoadDeckByID(id)
+		if err != nil {
+			return "", fmt.Errorf("failed to load deck by ID %d: %w", id, err)
+		}
+		return deckData.Name, nil
+	}
+	
+	// It's a name, validate it exists
+	_, err := deck.LoadDeck(deckIdentifier)
+	if err != nil {
+		return "", fmt.Errorf("failed to load deck by name %s: %w", deckIdentifier, err)
+	}
+	
+	return deckIdentifier, nil
 }
 
 // CreateGame creates a new game and generates initial log
 func CreateGame(req *CreateGameRequest) (*Game, error) {
 	db := database.GetDB()
+
+	// Resolve deck identifiers to names
+	player1DeckName, err := resolveDeckName(req.Player1Deck)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve player 1 deck: %w", err)
+	}
+	
+	player2DeckName, err := resolveDeckName(req.Player2Deck)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve player 2 deck: %w", err)
+	}
 
 	// Generate seed if not provided
 	seed := req.Seed
@@ -97,16 +130,16 @@ func CreateGame(req *CreateGameRequest) (*Game, error) {
 	if req.LogContent != "" {
 		logContent = req.LogContent
 	} else {
-		logContent = generateInitialLog(req.Player1Deck, req.Player2Deck, *seed)
+		logContent = generateInitialLog(player1DeckName, player2DeckName, *seed)
 	}
 
 	// Insert game into database
 	var gameID int
-	err := db.QueryRow(`
+	err = db.QueryRow(`
 		INSERT INTO games (player1_deck, player2_deck, seed, log_content, status)
 		VALUES ($1, $2, $3, $4, 'created')
 		RETURNING id`,
-		req.Player1Deck, req.Player2Deck, seed, logContent).Scan(&gameID)
+		player1DeckName, player2DeckName, seed, logContent).Scan(&gameID)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create game: %w", err)
