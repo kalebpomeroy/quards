@@ -4,18 +4,20 @@ let cardDatabase = {};
 let isPlaying = false;
 let playInterval;
 let availableActions = [];
-let currentGameName = null;
+let currentGameID = null;
 
 // Load game data on page load
 window.addEventListener('load', async () => {
     console.log('Page load event triggered');
+    console.log('Loading card database...');
     await loadCardDatabase();
+    console.log('Card database loaded, loading game steps...');
     await loadGameSteps();
     
     // Only render if we have game steps
     if (gameSteps.length > 0) {
         console.log('Rendering current step after all data loaded');
-        renderCurrentStep(); // This will call loadAvailableActions internally
+        await renderCurrentStep(); // This will call loadAvailableActions internally
     } else {
         console.log('No game steps to render');
     }
@@ -23,46 +25,75 @@ window.addEventListener('load', async () => {
 
 async function loadCardDatabase() {
     try {
-        const response = await fetch('/cards.json');
+        const response = await fetch('/cards.lorcana-api.json');
         const cards = await response.json();
         
-        // Create lookup by Unique_ID
+        // Create lookup map by Unique_ID
         cards.forEach(card => {
             cardDatabase[card.Unique_ID] = card;
         });
         
-        console.log(`Loaded ${cards.length} cards into database`);
+        const totalCards = Object.keys(cardDatabase).length;
+        
+        console.log(`Loaded ${totalCards} cards into database`);
     } catch (error) {
         console.error('Failed to load card database:', error);
     }
 }
 
-// Define which actions are player choices vs framework actions
-const PLAYER_CHOICE_ACTIONS = ['pass', 'ink_card', 'play_card', 'quest', 'challenge'];
-const FRAMEWORK_ACTIONS = ['game_start', 'shuffle_decks', 'draw_opening_hands', 'draw_card', 'turn_start'];
-
-function isPlayerChoiceAction(action) {
-    return PLAYER_CHOICE_ACTIONS.includes(action);
+async function fetchGameStateForStep(stepNumber) {
+    try {
+        if (!currentGameID) {
+            console.error('No current game ID');
+            return null;
+        }
+        
+        const response = await fetch(`/api/games/${currentGameID}/state?step=${stepNumber}`);
+        
+        if (!response.ok) {
+            console.error('Failed to fetch game state data');
+            return null;
+        }
+        
+        const data = await response.json();
+        return data.data;
+    } catch (error) {
+        console.error('Error fetching game state:', error);
+        return null;
+    }
 }
+
+// Note: Player choice detection is now handled server-side by the navigation API
 
 async function loadGameSteps() {
     try {
         // Check URL parameters for game name
         const urlParams = new URLSearchParams(window.location.search);
-        const gameName = urlParams.get('game');
+        const gameID = urlParams.get('game');
         
-        if (!gameName) {
+        console.log('URL params:', window.location.search);
+        console.log('Extracted gameID:', gameID);
+        
+        if (!gameID) {
             console.error('No game specified in URL parameters');
             gameSteps = [];
             updateStepCounter();
             return;
         }
         
-        currentGameName = gameName;
-        const apiUrl = `/api/games/by-name/${gameName}/steps`;
+        currentGameID = gameID;
+        const apiUrl = `/api/games/${gameID}/navigation`;
         
+        console.log('Fetching navigation data from API URL:', apiUrl);
         const response = await fetch(apiUrl);
+        console.log('API response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
+        console.log('Navigation API response data:', data);
         
         if (data.error) {
             throw new Error(data.error);
@@ -70,30 +101,24 @@ async function loadGameSteps() {
         
         const allSteps = data.data || [];
         
-        // Filter to only show player choice actions
-        const playerChoiceSteps = allSteps.filter(step => isPlayerChoiceAction(step.action));
+        // Filter to only show player choice actions using server-provided flag
+        const playerChoiceSteps = allSteps.filter(step => step.isPlayerChoice);
         
         // If there are no player choice steps yet, use the last framework step
         // This handles newly created games that haven't had any player actions yet
         if (playerChoiceSteps.length === 0 && allSteps.length > 0) {
             // Use the last framework step (e.g., turn_start) and mark it as a choice point
             const lastStep = allSteps[allSteps.length - 1];
-            lastStep.originalStepNumber = allSteps.length; // 1-indexed for API
+            lastStep.originalStepNumber = lastStep.step + 1; // Server provides step numbers
             gameSteps = [lastStep];
             currentStep = 0;
             console.log(`No player choice steps found, using last framework step: ${lastStep.action}`);
         } else {
             gameSteps = playerChoiceSteps;
             
-            // Create mapping from filtered steps back to original step numbers
-            gameSteps.forEach((step, index) => {
-                const originalIndex = allSteps.findIndex(original => 
-                    original.turn === step.turn && 
-                    original.player === step.player && 
-                    original.action === step.action &&
-                    JSON.stringify(original.parameters) === JSON.stringify(step.parameters)
-                );
-                step.originalStepNumber = originalIndex + 1; // 1-indexed for API
+            // Server already provides step numbers, just copy them
+            gameSteps.forEach((step) => {
+                step.originalStepNumber = step.step + 1; // Convert to 1-indexed for API
             });
             
             // Start at the last step instead of the first
@@ -107,7 +132,7 @@ async function loadGameSteps() {
         }
         
         updateStepCounter();
-        console.log(`Loaded ${gameSteps.length} player choice steps for game: ${gameName}, starting at step ${currentStep + 1}`);
+        console.log(`Loaded ${gameSteps.length} player choice steps for game: ${gameID}, starting at step ${currentStep + 1}`);
         
         // Ensure we render the current step after loading
         if (gameSteps.length > 0) {
@@ -116,6 +141,7 @@ async function loadGameSteps() {
         }
     } catch (error) {
         console.error('Failed to load game steps:', error);
+        console.error('Error details:', error.message);
         gameSteps = [];
         updateStepCounter();
         
@@ -138,7 +164,7 @@ function updateStepCounter() {
 
 async function loadAvailableActions() {
     try {
-        if (!currentGameName) {
+        if (!currentGameID) {
             console.log('No game loaded, skipping available actions');
             availableActions = [];
             renderActions();
@@ -151,7 +177,7 @@ async function loadAvailableActions() {
         // Calculate actions based on historical context (up to original step number)
         const currentGameStep = gameSteps[currentStep];
         const stepNumber = currentGameStep ? currentGameStep.originalStepNumber : currentStep + 1;
-        const apiUrl = `/api/games/by-name/${currentGameName}/actions?step=${stepNumber}`;
+        const apiUrl = `/api/games/${currentGameID}/actions?step=${stepNumber}`;
         const response = await fetch(apiUrl);
         const data = await response.json();
         
@@ -161,7 +187,7 @@ async function loadAvailableActions() {
         
         availableActions = data.data || [];
         renderActions(isLastStep);
-        console.log(`Loaded ${availableActions.length} available actions for game: ${currentGameName} at step ${currentStep + 1}`);
+        console.log(`Loaded ${availableActions.length} available actions for game: ${currentGameID} at step ${currentStep + 1}`);
     } catch (error) {
         console.error('Failed to load available actions:', error);
         availableActions = [];
@@ -203,7 +229,6 @@ function renderActions(isCurrentStep = false) {
         'ink_card': [],
         'play_card': [],
         'quest': [],
-        'challenge': []
     };
     
     actionsToShow.forEach(action => {
@@ -258,10 +283,11 @@ function renderActions(isCurrentStep = false) {
                 const cardId = action.parameters?.card_id;
                 const cardInfo = cardDatabase[cardId];
                 
+                
+                const cardElement = document.createElement('div');
+                cardElement.className = `action-card-image ${getActionClass(isCurrentStep, isChosenAction)}`;
+                
                 if (cardInfo) {
-                    const cardElement = document.createElement('div');
-                    cardElement.className = `action-card-image ${getActionClass(isCurrentStep, isChosenAction)}`;
-                    
                     cardElement.innerHTML = `
                         <img src="${cardInfo.Image}" alt="${cardInfo.Name}" />
                         <div class="card-tooltip">${cardInfo.Name}${action.parameters?.cost ? ` (${action.parameters.cost} ink)` : ''}${action.parameters?.lore ? ` (+${action.parameters.lore} lore)` : ''}</div>
@@ -271,10 +297,17 @@ function renderActions(isCurrentStep = false) {
                     // Add hover tooltip
                     cardElement.addEventListener('mouseenter', () => showCardDetail(cardInfo));
                     cardElement.addEventListener('mouseleave', hideCardDetail);
-                    
-                    addActionClickHandler(cardElement, action, isCurrentStep, isChosenAction);
-                    cardsContainer.appendChild(cardElement);
+                } else {
+                    // Fallback for missing card info
+                    cardElement.innerHTML = `
+                        <img src="/back.png" alt="Card Back" />
+                        <div class="card-tooltip">${cardId} (Card data not found)${action.parameters?.cost ? ` (${action.parameters.cost} ink)` : ''}${action.parameters?.lore ? ` (+${action.parameters.lore} lore)` : ''}</div>
+                        ${getActionHint(isCurrentStep, isChosenAction)}
+                    `;
                 }
+                
+                addActionClickHandler(cardElement, action, isCurrentStep, isChosenAction);
+                cardsContainer.appendChild(cardElement);
             });
         }
         
@@ -380,7 +413,7 @@ function actionsMatch(action, gameStep) {
 
 async function truncateGameFromAction(action) {
     try {
-        if (!currentGameName) {
+        if (!currentGameID) {
             throw new Error('No game loaded');
         }
         
@@ -406,7 +439,7 @@ async function truncateGameFromAction(action) {
         const logContent = logEntries.join('\n') + '\n';
         
         // Update the current game with truncated log
-        const response = await fetch(`/api/games/by-name/${currentGameName}/truncate`, {
+        const response = await fetch(`/api/games/${currentGameID}/truncate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -426,7 +459,7 @@ async function truncateGameFromAction(action) {
         
         // Reload the game to show the truncated state
         await loadGameSteps();
-        renderCurrentStep();
+        await renderCurrentStep();
         
     } catch (error) {
         console.error('Failed to truncate game:', error);
@@ -436,7 +469,7 @@ async function truncateGameFromAction(action) {
 
 async function forkGameFromAction(action) {
     try {
-        if (!currentGameName) {
+        if (!currentGameID) {
             throw new Error('No game loaded');
         }
         
@@ -494,14 +527,14 @@ async function forkGameFromAction(action) {
 
 async function appendActionToLog(action) {
     try {
-        if (!currentGameName) {
+        if (!currentGameID) {
             throw new Error('No game loaded');
         }
         
         console.log('Executing action:', action);
         
         // Send action to backend API
-        const response = await fetch(`/api/games/by-name/${currentGameName}/execute`, {
+        const response = await fetch(`/api/games/${currentGameID}/execute`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -522,7 +555,7 @@ async function appendActionToLog(action) {
         
         // Reload the game state to show the new action
         await loadGameSteps();
-        renderCurrentStep(); // This will call loadAvailableActions internally
+        await renderCurrentStep(); // This will call loadAvailableActions internally
         
     } catch (error) {
         console.error('Failed to execute action:', error);
@@ -530,7 +563,7 @@ async function appendActionToLog(action) {
     }
 }
 
-function renderCurrentStep() {
+async function renderCurrentStep() {
     if (gameSteps.length === 0) {
         console.log('No game steps to render');
         return;
@@ -540,7 +573,13 @@ function renderCurrentStep() {
     const step = gameSteps[currentStep];
     console.log('Step data:', step);
     
-    const gameState = step.gameState;
+    // Fetch game state for the current step using the original step number
+    const stepNumber = step.originalStepNumber || (currentStep + 1);
+    const gameState = await fetchGameStateForStep(stepNumber);
+    if (!gameState) {
+        console.error('Failed to load game state for step');
+        return;
+    }
     console.log('Game state:', gameState);
     
     const zones = gameState.zones;
@@ -628,7 +667,7 @@ function renderPlayerZones(playerZones, playerId) {
     renderHandCards(`${playerId}-hand`, playerZones.hand || []);
     
     // Render battlefield (face-up cards with instances and exhaustion)
-    renderBattlefieldCards(`${playerId}-battlefield`, playerZones.battlefield);
+    renderBattlefieldCards(`${playerId}-battlefield`, playerZones.in_play || []);
 }
 
 function renderPlayerStats(playerStats, playerId) {
@@ -703,7 +742,7 @@ function renderInkCards(containerId, inkCards) {
         
         // Show face up only on the turn it was played, otherwise show back
         const showFaceUp = inkCard.turnPlayed === currentTurn;
-        const cardData = cardDatabase[inkCard.cardId];
+        const cardData = cardDatabase[inkCard.card_id];
         
         if (showFaceUp && cardData && cardData.Image) {
             card.innerHTML = `
@@ -736,18 +775,18 @@ function renderBattlefieldCards(containerId, battlefieldCards) {
             card.classList.add('exhausted');
         }
         
-        const cardData = cardDatabase[battlefieldCard.cardId];
+        const cardData = cardDatabase[battlefieldCard.card_id];
         if (cardData && cardData.Image) {
             card.innerHTML = `
                 <img src="${cardData.Image}" alt="${cardData.Name}" />
-                <div class="tooltip">${cardData.Name}${battlefieldCard.exhausted ? ' (Exhausted)' : ''}<br/>Instance: ${battlefieldCard.id}</div>
+                <div class="tooltip">${cardData.Name}${battlefieldCard.exhausted ? ' (Exhausted)' : ''}<br/>Instance: ${battlefieldCard.instance_id}</div>
             `;
             card.addEventListener('mouseenter', () => showCardDetail(cardData));
             card.addEventListener('mouseleave', hideCardDetail);
         } else {
             card.innerHTML = `
                 <img src="/back.png" alt="Card Back" />
-                <div class="tooltip">${battlefieldCard.cardId}${battlefieldCard.exhausted ? ' (Exhausted)' : ''}<br/>Instance: ${battlefieldCard.id}</div>
+                <div class="tooltip">${battlefieldCard.card_id}${battlefieldCard.exhausted ? ' (Exhausted)' : ''}<br/>Instance: ${battlefieldCard.instance_id}</div>
             `;
         }
         
@@ -755,21 +794,21 @@ function renderBattlefieldCards(containerId, battlefieldCards) {
     });
 }
 
-function nextStep() {
+async function nextStep() {
     if (currentStep < gameSteps.length - 1) {
         currentStep++;
-        renderCurrentStep();
+        await renderCurrentStep();
     }
 }
 
-function previousStep() {
+async function previousStep() {
     if (currentStep > 0) {
         currentStep--;
-        renderCurrentStep();
+        await renderCurrentStep();
     }
 }
 
-function seekToPosition(event) {
+async function seekToPosition(event) {
     const timeline = event.currentTarget;
     const rect = timeline.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
@@ -779,7 +818,7 @@ function seekToPosition(event) {
     if (currentStep >= gameSteps.length) currentStep = gameSteps.length - 1;
     if (currentStep < 0) currentStep = 0;
     
-    renderCurrentStep();
+    await renderCurrentStep();
 }
 
 function playPause() {
@@ -829,7 +868,7 @@ function hideCardDetail() {
     detail.classList.remove('visible');
 }
 
-function renderGameHistory() {
+async function renderGameHistory() {
     const historyContainer = document.getElementById('game-history');
     if (!historyContainer) {
         console.error('game-history element not found');
@@ -846,101 +885,51 @@ function renderGameHistory() {
     
     console.log(`Rendering game history: ${currentStep + 1} of ${gameSteps.length} steps`);
     
-    // Show history up to current step
-    for (let i = 0; i <= currentStep; i++) {
-        const step = gameSteps[i];
-        const historyEntry = document.createElement('div');
-        historyEntry.className = 'history-entry';
-        
-        if (i === currentStep) {
-            historyEntry.classList.add('current');
+    try {
+        // Fetch history descriptions from server
+        const response = await fetch(`/api/games/${currentGameID}/history`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch history: ${response.statusText}`);
         }
         
-        let actionText = '';
+        const result = await response.json();
+        const historyDescriptions = result.data || [];
         
-        switch (step.action) {
-            case 'game_start':
-                actionText = 'Game begins';
-                break;
-            case 'shuffle_decks':
-                actionText = 'Decks shuffled';
-                break;
-            case 'draw_opening_hands':
-                actionText = 'Players draw opening hands (7 cards each)';
-                break;
-            case 'draw_card':
-                if (step.parameters && step.parameters.card_id) {
-                    const cardData = cardDatabase[step.parameters.card_id];
-                    const cardName = cardData ? cardData.Name : step.parameters.card_id;
-                    actionText = `Player ${step.player} draws ${cardName}`;
-                } else {
-                    actionText = `Player ${step.player} draws a card`;
-                }
-                break;
-            case 'turn_start':
-                const turnNum = step.parameters && step.parameters.turn ? step.parameters.turn : 'next';
-                actionText = `Player ${step.player} starts turn ${turnNum}`;
-                break;
-            case 'ink_card':
-                if (step.parameters && step.parameters.card_id) {
-                    const cardData = cardDatabase[step.parameters.card_id];
-                    const cardName = cardData ? cardData.Name : step.parameters.card_id;
-                    actionText = `Player ${step.player} inks ${cardName}`;
-                } else {
-                    actionText = `Player ${step.player} inks a card`;
-                }
-                break;
-            case 'play_card':
-                if (step.parameters && step.parameters.card_id) {
-                    const cardData = cardDatabase[step.parameters.card_id];
-                    const cardName = cardData ? cardData.Name : step.parameters.card_id;
-                    const cost = step.parameters.cost ? ` (${step.parameters.cost} ink)` : '';
-                    actionText = `Player ${step.player} plays ${cardName}${cost}`;
-                } else {
-                    actionText = `Player ${step.player} plays a card`;
-                }
-                break;
-            case 'quest':
-                if (step.parameters && step.parameters.card_id) {
-                    const cardData = cardDatabase[step.parameters.card_id];
-                    const cardName = cardData ? cardData.Name : step.parameters.card_id;
-                    const lore = step.parameters.lore ? ` (+${step.parameters.lore} lore)` : '';
-                    actionText = `Player ${step.player} quests with ${cardName}${lore}`;
-                } else {
-                    actionText = `Player ${step.player} quests`;
-                }
-                break;
-            case 'pass':
-                actionText = `Player ${step.player} passes turn`;
-                break;
-            case 'challenge':
-                actionText = `Player ${step.player} challenges`;
-                break;
-            default:
-                // Generic fallback
-                const paramStr = step.parameters ? 
-                    Object.entries(step.parameters).map(([k,v]) => `${k}: ${v}`).join(', ') : '';
-                actionText = `Player ${step.player} ${step.action}${paramStr ? ` (${paramStr})` : ''}`;
+        // Show history up to current step
+        for (let i = 0; i <= currentStep; i++) {
+            const step = gameSteps[i];
+            const historyItem = historyDescriptions[i];
+            if (!step || !historyItem) continue;
+            
+            const historyEntry = document.createElement('div');
+            historyEntry.className = 'history-entry';
+            
+            if (i === currentStep) {
+                historyEntry.classList.add('current');
+            }
+            
+            historyEntry.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 5px;">Step ${i + 1}</div>
+                <div>${historyItem.description}</div>
+            `;
+            
+            // Click to jump to step
+            historyEntry.addEventListener('click', async () => {
+                currentStep = i;
+                await renderCurrentStep();
+            });
+            
+            historyContainer.appendChild(historyEntry);
         }
         
-        historyEntry.innerHTML = `
-            <div style="font-weight: bold; margin-bottom: 5px;">Step ${i + 1}</div>
-            <div>${actionText}</div>
-        `;
-        
-        // Click to jump to step
-        historyEntry.addEventListener('click', () => {
-            currentStep = i;
-            renderCurrentStep();
-        });
-        
-        historyContainer.appendChild(historyEntry);
-    }
-    
-    // Auto-scroll to current step
-    const currentEntry = historyContainer.querySelector('.current');
-    if (currentEntry) {
-        currentEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Auto-scroll to current step
+        const currentEntry = historyContainer.querySelector('.current');
+        if (currentEntry) {
+            currentEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } catch (error) {
+        console.error('Error rendering game history:', error);
+        historyContainer.innerHTML = '<div>Error loading game history</div>';
     }
 }
 

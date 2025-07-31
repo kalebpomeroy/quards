@@ -206,7 +206,7 @@ async function createGame() {
         if (response.ok) {
             const result = await response.json();
             // Redirect to game viewer
-            window.location.href = `/?game=${result.data.name}`;
+            window.location.href = `/?game=${result.data.id}`;
         } else {
             const error = await response.json();
             throw new Error(error.error || 'Failed to create game');
@@ -263,7 +263,7 @@ async function uploadGame() {
         if (response.ok) {
             const result = await response.json();
             // Navigate to game viewer
-            window.location.href = `/?game=${result.data.name}`;
+            window.location.href = `/?game=${result.data.id}`;
         } else {
             const error = await response.json();
             throw new Error(error.error || 'Failed to upload game');

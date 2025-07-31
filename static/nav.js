@@ -34,21 +34,21 @@ function renderRecentGames(games) {
         const gameTypeIcon = game.type === 'generated' ? '🎮' : '📝';
         
         return `
-            <div class="game-item">
+            <a href="/?game=${game.id}" class="game-item">
                 <div class="game-info">
-                    <div class="game-title">${gameTypeIcon} ${game.name}</div>
+                    <div class="game-title">${gameTypeIcon} ${game.id}</div>
                     <div class="game-meta">
                         ${game.player1Deck} vs ${game.player2Deck} • ${createdDate}
                         ${game.seed !== null && game.seed !== undefined ? `• Seed: ${String(game.seed)}` : ''}
                     </div>
                 </div>
-                <div class="game-actions">
-                    <a href="/?game=${game.name}" class="btn-small">View</a>
-                    <a href="/games.html" class="btn-small secondary">Details</a>
-                </div>
-            </div>
+            </a>
         `;
     }).join('');
+}
+
+function viewGame(gameId) {
+    window.location.href = `/?game=${gameId}`;
 }
 
 function setupEventListeners() {

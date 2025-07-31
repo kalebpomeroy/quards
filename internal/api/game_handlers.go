@@ -64,19 +64,6 @@ func GetGameHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, gameData)
 }
 
-// GetGameByNameHandler returns a specific game by name (for compatibility with existing log system)
-func GetGameByNameHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	gameName := vars["name"]
-	
-	gameData, err := game.LoadGameByName(gameName)
-	if err != nil {
-		writeError(w, fmt.Sprintf("failed to load game: %v", err), http.StatusNotFound)
-		return
-	}
-	
-	writeResponse(w, gameData)
-}
 
 // DeleteGameHandler deletes a game
 func DeleteGameHandler(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +91,7 @@ type ExecuteActionRequest struct {
 // ExecuteActionHandler executes an action in a game and appends it to the log
 func ExecuteActionHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	gameName := vars["name"]
+	gameID := vars["id"]
 	
 	var req ExecuteActionRequest
 	decoder := json.NewDecoder(r.Body)
@@ -119,7 +106,7 @@ func ExecuteActionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// Execute the action by appending to the game log
-	err := game.AppendActionToGame(gameName, req.Type, req.Parameters)
+	err := game.AppendActionToGameByID(gameID, req.Type, req.Parameters)
 	if err != nil {
 		writeError(w, fmt.Sprintf("failed to execute action: %v", err), http.StatusInternalServerError)
 		return

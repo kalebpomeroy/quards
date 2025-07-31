@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/mux"
 	"quards/internal/api"
 	"quards/internal/database"
-	"quards/internal/lens"
 )
 
 func main() {
@@ -18,10 +17,6 @@ func main() {
 	}
 	defer database.CloseDB()
 	
-	// Initialize card database at startup
-	if err := lens.InitializeCardDatabase(); err != nil {
-		log.Fatal("Failed to initialize card database:", err)
-	}
 	
 	r := mux.NewRouter()
 	
@@ -40,11 +35,15 @@ func main() {
 	apiRouter.HandleFunc("/games", api.CreateGameHandler).Methods("POST")
 	apiRouter.HandleFunc("/games/{id}", api.GetGameHandler).Methods("GET")
 	apiRouter.HandleFunc("/games/{id}", api.DeleteGameHandler).Methods("DELETE")
-	apiRouter.HandleFunc("/games/by-name/{name}", api.GetGameByNameHandler).Methods("GET")
-	apiRouter.HandleFunc("/games/by-name/{name}/actions", api.GameAvailableActionsHandler).Methods("GET")
-	apiRouter.HandleFunc("/games/by-name/{name}/execute", api.ExecuteActionHandler).Methods("POST")
-	apiRouter.HandleFunc("/games/by-name/{name}/truncate", api.GameTruncateHandler).Methods("POST")
-	apiRouter.HandleFunc("/games/by-name/{name}/steps", api.GameByNameStepsHandler).Methods("GET")
+	apiRouter.HandleFunc("/games/{id}/actions", api.GameAvailableActionsHandler).Methods("GET")
+	apiRouter.HandleFunc("/games/{id}/execute", api.ExecuteActionHandler).Methods("POST")
+	apiRouter.HandleFunc("/games/{id}/truncate", api.GameTruncateHandler).Methods("POST")
+	apiRouter.HandleFunc("/games/{id}/steps", api.GameStepsHandler).Methods("GET")
+	apiRouter.HandleFunc("/games/{id}/history", api.GameHistoryHandler).Methods("GET")
+	apiRouter.HandleFunc("/games/{id}/navigation", api.StepsNavigationHandler).Methods("GET")
+	apiRouter.HandleFunc("/games/{id}/state", api.GameStateHandler).Methods("GET")
+	apiRouter.HandleFunc("/games/{id}/battlefield", api.GameBattlefieldHandler).Methods("GET")
+	apiRouter.HandleFunc("/cache/stats", api.CacheStatsHandler).Methods("GET")
 	
 	// Redirect root to navigation only if no query parameters
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

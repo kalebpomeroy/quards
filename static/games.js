@@ -60,10 +60,12 @@ async function loadGames() {
         const data = await response.json();
         games = data.data || [];
         
+        console.log('Raw API response:', games);
+        
         // Convert API format to frontend format
         games = games.map(game => ({
-            id: game.name || `game-${game.id}`, // Fallback to ID-based name
-            name: game.name,
+            id: game.id || 0, // Use numeric ID directly, fallback to 0
+            name: `Game ${game.id || 'Unknown'}`, // Generate display name from ID
             player1Deck: game.player1Deck,
             player2Deck: game.player2Deck,
             player1DeckDescription: getDecksDescription(game.player1Deck),
@@ -74,6 +76,7 @@ async function loadGames() {
             seed: game.seed
         }));
         
+        console.log('Mapped games:', games);
         console.log(`Loaded ${games.length} games`);
     } catch (error) {
         console.error('Failed to load games:', error);
@@ -175,7 +178,7 @@ function renderGames() {
         
         gameCard.innerHTML = `
             <div class="game-header">
-                <div class="game-id">${game.name || game.id}</div>
+                <div class="game-id">${game.name}</div>
                 <div class="game-date">${createdDate}</div>
             </div>
             
