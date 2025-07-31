@@ -15,6 +15,7 @@ type Deck struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Cards       map[string]int    `json:"cards"`       // CardID -> Count
+	UserID      int               `json:"userId"`
 	Created     time.Time         `json:"created"`
 	Modified    time.Time         `json:"modified"`
 }
@@ -25,6 +26,7 @@ type DeckList struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	CardCount   int       `json:"cardCount"`
+	UserID      int       `json:"userId"`
 	Created     time.Time `json:"created"`
 	Modified    time.Time `json:"modified"`
 }
@@ -105,9 +107,9 @@ func LoadDeck(name string) (*Deck, error) {
 	var cardsJSON []byte
 	
 	err := db.QueryRow(`
-		SELECT id, name, description, cards, created_at, modified_at 
+		SELECT id, name, description, cards, user_id, created_at, modified_at 
 		FROM decks WHERE name = $1`, name).Scan(
-		&deck.ID, &deck.Name, &deck.Description, &cardsJSON, &deck.Created, &deck.Modified)
+		&deck.ID, &deck.Name, &deck.Description, &cardsJSON, &deck.UserID, &deck.Created, &deck.Modified)
 	
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -132,9 +134,9 @@ func LoadDeckByID(id int) (*Deck, error) {
 	var cardsJSON []byte
 	
 	err := db.QueryRow(`
-		SELECT id, name, description, cards, created_at, modified_at 
+		SELECT id, name, description, cards, user_id, created_at, modified_at 
 		FROM decks WHERE id = $1`, id).Scan(
-		&deck.ID, &deck.Name, &deck.Description, &cardsJSON, &deck.Created, &deck.Modified)
+		&deck.ID, &deck.Name, &deck.Description, &cardsJSON, &deck.UserID, &deck.Created, &deck.Modified)
 	
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -156,7 +158,7 @@ func ListDecks() ([]DeckList, error) {
 	db := database.GetDB()
 	
 	rows, err := db.Query(`
-		SELECT id, name, description, cards, created_at, modified_at 
+		SELECT id, name, description, cards, user_id, created_at, modified_at 
 		FROM decks ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query decks: %w", err)
@@ -165,12 +167,12 @@ func ListDecks() ([]DeckList, error) {
 	
 	var decks []DeckList
 	for rows.Next() {
-		var id int
+		var id, userID int
 		var name, description string
 		var cardsJSON []byte
 		var created, modified time.Time
 		
-		err := rows.Scan(&id, &name, &description, &cardsJSON, &created, &modified)
+		err := rows.Scan(&id, &name, &description, &cardsJSON, &userID, &created, &modified)
 		if err != nil {
 			continue // Skip invalid rows
 		}
@@ -191,6 +193,7 @@ func ListDecks() ([]DeckList, error) {
 			Name:        name,
 			Description: description,
 			CardCount:   cardCount,
+			UserID:      userID,
 			Created:     created,
 			Modified:    modified,
 		})
